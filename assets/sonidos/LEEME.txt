@@ -24,8 +24,13 @@ animales/
 
 burbujas/
    pop1.wav ... pop4.wav ... la burbuja que revienta ("¡blup!")
-   super_toque.wav ......... cada toque a la súper burbuja o a la mega
-   super_pop.wav ........... la súper, la mega o la arcoíris que revientan
+   super_toque.wav ......... cada toque a la súper burbuja, la mega o un jefe
+   super_pop.wav ........... la súper, la mega o un jefe que revientan
+   ay1.wav ... ay4.wav ..... la burbuja con carita que revienta ("¡ay!")
+   jiji.wav ................ la risita de las burbujas y de la mascota
+   soplo.wav ............... la mascota que sopla una burbuja
+   aplausos.wav ............ la mascota que aplaude
+   jefe.wav ................ la fanfarria cuando llega un jefe
 
 contar/
    nota1.wav ... nota10.wav ... la notita al contar cada cosa (va subiendo)

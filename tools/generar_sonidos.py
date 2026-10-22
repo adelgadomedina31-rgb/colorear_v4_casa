@@ -22,6 +22,12 @@
     en una nota distinta.
   - super_toque.wav: un toque a la súper burbuja (se estira como goma).
   - super_pop.wav: la súper burbuja que revienta, con destellos.
+  - ay1.wav ... ay4.wav: una burbuja con carita que revienta y dice
+    "¡ay!" (voz chiquita y graciosa, cada una un poco más aguda).
+  - jiji.wav: la risita de las burbujas y de la mascota.
+  - soplo.wav: la mascota que sopla una burbuja (suavecito).
+  - aplausos.wav: la mascota que aplaude al pasar de nivel.
+  - jefe.wav: la fanfarria cuando llega un jefe ("¡ta-ta-ta-taaa!").
 
   contar/
   - nota1.wav ... nota10.wav: una notita que sube al contar cada cosa
@@ -316,9 +322,178 @@ def super_pop(semilla=21):
     return suavizar_final(normalizar(pista, 0.85), 80)
 
 
+# ---------------------------------------------------------------------------
+#  Voz chiquita (para el "¡ay!" y la risita): se suman los armónicos de la
+#  voz, y cada uno suena más o menos fuerte según las "formantes" (las
+#  resonancias de la boca que hacen que suene "a" o "i").
+# ---------------------------------------------------------------------------
+
+# Formantes (frecuencia, ancho) de una voz de niño.
+VOCAL_A = [(1050, 130), (1650, 160), (3300, 250)]
+VOCAL_I = [(400, 80), (3000, 200), (3900, 300)]
+
+
+def _resonancia(f, centro, ancho):
+    q = centro / ancho
+    return 1.0 / np.sqrt((1 - (f / centro) ** 2) ** 2 + (f / (centro * q)) ** 2)
+
+
+def voz(f0, formantes, dur, armonicos=24):
+    """Una vocal cantada. [f0] = la altura en cada momento (un arreglo),
+    [formantes] = una función que da las 3 formantes en cada momento."""
+    t = tiempo(dur)
+    salida = np.zeros(len(t))
+    fs = formantes(t)
+    for k in range(1, armonicos + 1):
+        fk = k * f0
+        activo = fk < FS / 2 - 500
+        if not np.any(activo):
+            break
+        amp = np.zeros(len(t))
+        for (centro, ancho), peso in zip(fs, (1.0, 0.6, 0.25)):
+            amp += peso * _resonancia(fk, centro, ancho)
+        amp *= (1.0 / k) * activo  # la voz es más suave en los agudos
+        fase = 2 * np.pi * np.cumsum(fk) / FS
+        salida += amp * np.sin(fase)
+    return salida
+
+
+def _entre(a, b, f):
+    return a + (b - a) * f
+
+
+def ay(f0, semilla):
+    """Una burbuja que revienta y dice "¡ay!": un clic de pompa y una
+    vocecita que va de la "a" a la "i" (y baja, como sorprendida)."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.36
+    pista = np.zeros(int(FS * dur))
+    t = tiempo(dur)
+    # El clic de la pompa.
+    clic = filtrar(azar.standard_normal(len(t)), 2500, 11000)
+    clic *= (1 - np.exp(-t / 0.0003)) * np.exp(-t / 0.004)
+    pista += normalizar(clic, 0.35)
+    # La vocecita.
+    dv = 0.3
+    tv = tiempo(dv)
+    sube = np.minimum(1, tv / 0.04)
+    baja = np.clip((tv - 0.04) / (dv - 0.04), 0, 1)
+    altura = f0 * (_entre(1.05, 1.25, sube) * _entre(1.0, 0.72, baja ** 1.3))
+    altura *= 1 + 0.02 * np.sin(2 * np.pi * 7 * tv)
+
+    def formantes(tt):
+        f = np.clip((tt - 0.09) / 0.12, 0, 1)
+        f = f * f * (3 - 2 * f)  # suave
+        return [(_entre(a[0], i[0], f), _entre(a[1], i[1], f))
+                for a, i in zip(VOCAL_A, VOCAL_I)]
+
+    vocal = voz(altura, formantes, dv)
+    env = np.minimum(1, tv / 0.012) * np.clip((dv - tv) / 0.09, 0, 1) ** 1.5
+    vocal *= env
+    # Un poquito de aire al empezar (la "h").
+    aire = filtrar(azar.standard_normal(len(tv)), 1500, 7000)
+    aire *= np.exp(-tv / 0.02)
+    vocal = normalizar(vocal, 1) + 0.12 * normalizar(aire, 1)
+    poner(pista, 0.012, normalizar(vocal, 0.85))
+    return suavizar_final(normalizar(pista, 0.85), 25)
+
+
+def jiji(semilla=41):
+    """La risita: "¡ji-ji-ji-ji!", cada "ji" un poquito más bajo."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.62
+    pista = np.zeros(int(FS * dur))
+    for i, f0 in enumerate((640, 610, 585, 560)):
+        inicio = i * 0.125
+        # La "j": un soplidito.
+        dj = 0.03
+        tj = tiempo(dj)
+        jota = filtrar(azar.standard_normal(len(tj)), 2000, 7000)
+        jota *= np.minimum(1, tj / 0.005) * np.exp(-tj / 0.012)
+        poner(pista, inicio, normalizar(jota, 0.25))
+        # La "i".
+        dv = 0.075
+        tv = tiempo(dv)
+        altura = f0 * _entre(1.08, 0.92, tv / dv)
+        vocal = voz(altura, lambda tt: VOCAL_I, dv)
+        vocal *= np.minimum(1, tv / 0.008) * np.clip((dv - tv) / 0.03, 0, 1)
+        poner(pista, inicio + 0.018, normalizar(vocal, 0.8))
+    return suavizar_final(normalizar(pista, 0.8), 30)
+
+
+def soplo(semilla=43):
+    """La mascota que sopla una burbuja: "fuuu" suavecito y un blup."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.4
+    t = tiempo(dur)
+    pista = np.zeros(len(t))
+    aire = filtrar(azar.standard_normal(len(t)), 250, 2200)
+    aire *= np.minimum(1, t / 0.06) * np.exp(-np.maximum(0, t - 0.08) / 0.07)
+    pista += normalizar(aire, 0.6)
+    poner(pista, 0.16, normalizar(burbuja(nota("E5"), 0.14, 1.4, 0.04), 0.45))
+    return suavizar_final(normalizar(pista, 0.4), 40)
+
+
+def aplausos_cortos():
+    """Aplausos cortitos (la mascota que aplaude)."""
+    pista = aplausos(1.5, 9)
+    poner(pista, 0.0, campanita(nota("G5"), 0.6, 0.08))
+    poner(pista, 0.08, campanita(nota("C6"), 0.6, 0.08))
+    return suavizar_final(normalizar(pista, 0.65), 200)
+
+
+def trompeta(frec, dur, vol=1.0):
+    """Una nota de trompeta (de juguete): brillante y con vibrato."""
+    t = tiempo(dur)
+    vib = 1 + 0.006 * np.sin(2 * np.pi * 5.5 * t) * np.minimum(1, t / 0.15)
+    f = frec * vib
+    fase = 2 * np.pi * np.cumsum(f) / FS
+    brillo = 0.45 + 0.55 * np.minimum(1, t / 0.03)
+    s = np.zeros(len(t))
+    for k in range(1, 12):
+        if k * frec > FS / 2 - 500:
+            break
+        s += (brillo ** (k * 0.5)) / k * np.sin(k * fase)
+    env = np.minimum(1, t / 0.015) * np.clip((dur - t) / 0.05, 0, 1)
+    return vol * s * env
+
+
+def jefe():
+    """Llega el jefe: "¡ta-ta-ta-taaa!" con tambor y destellos."""
+    total = 1.5
+    pista = np.zeros(int(FS * total))
+    for inicio, n, d in [(0.0, "G4", 0.12), (0.15, "G4", 0.12),
+                         (0.30, "G4", 0.12), (0.45, "C5", 0.75)]:
+        poner(pista, inicio, trompeta(nota(n), d, 0.6))
+        poner(pista, inicio, trompeta(nota(n) * 1.26, d, 0.25))  # una tercera
+    # El tambor.
+    azar = np.random.default_rng(47)
+    for inicio in (0.0, 0.15, 0.30, 0.45):
+        tt = tiempo(0.25)
+        golpe = np.sin(2 * np.pi * 90 * tt) * np.exp(-tt / 0.06)
+        ruido = filtrar(azar.standard_normal(len(tt)), 200, 3000) * np.exp(-tt / 0.02)
+        poner(pista, inicio, normalizar(golpe, 0.5) + normalizar(ruido, 0.2))
+    for _ in range(8):
+        poner(pista, azar.uniform(0.5, 1.2), campanita(azar.uniform(2600, 5000), 0.3, 0.06))
+    return suavizar_final(normalizar(pista, 0.8), 150)
+
+
+def guardar_burbujas_nuevos(guardar_en):
+    """Los sonidos de las burbujas con carita, la mascota y los jefes."""
+    for i, f0 in enumerate((430, 480, 530, 590)):
+        guardar_en("burbujas", f"ay{i + 1}.wav", ay(f0, 500 + i))
+    guardar_en("burbujas", "jiji.wav", jiji())
+    guardar_en("burbujas", "soplo.wav", soplo())
+    guardar_en("burbujas", "aplausos.wav", aplausos_cortos())
+    guardar_en("burbujas", "jefe.wav", jefe())
+
+
 def main():
+    import sys
     carpeta = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                             "..", "assets", "sonidos"))
+    if len(sys.argv) > 1:  # para probar: guardarlos en otra carpeta
+        carpeta = os.path.abspath(sys.argv[1])
     for grupo in ("comunes", "pintar", "colores", "animales", "burbujas", "contar"):
         os.makedirs(os.path.join(carpeta, grupo), exist_ok=True)
     # Quita los sonidos de versiones anteriores (antes estaban sueltos).
@@ -344,6 +519,7 @@ def main():
         guardar_en("burbujas", f"pop{i + 1}.wav", pop(nota(n), 300 + i))
     guardar_en("burbujas", "super_toque.wav", super_toque())
     guardar_en("burbujas", "super_pop.wav", super_pop())
+    guardar_burbujas_nuevos(guardar_en)
     for i, n in enumerate(["C5", "D5", "E5", "G5", "A5", "C6", "D6", "E6", "G6", "A6"]):
         guardar_en("contar", f"nota{i + 1}.wav", campanita(nota(n), 0.6, 0.8) * np.linspace(1, 0.9, int(FS * 0.6)))
     for grupo in sorted(os.listdir(carpeta)):

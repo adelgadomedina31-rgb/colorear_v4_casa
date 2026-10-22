@@ -45,7 +45,7 @@ void main() {
         const Duration(seconds: AjustesBurbujas.segundosCelebracionGrande));
     expect(celebracion, findsNothing);
     expect(juego.nivel, 6);
-    expect(frases.last, '¡Nivel 6!');
+    expect(frases.last, startsWith('¡Nivel 6!'));
     expect(find.text('NIVEL 6'), findsOneWidget);
     await cerrarPantalla(tester);
   });

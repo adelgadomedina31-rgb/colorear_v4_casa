@@ -2,15 +2,20 @@
 //  AJUSTES DEL JUEGO "BURBUJAS" (Revienta las burbujas)
 // =============================================================================
 //
-//  Van saliendo burbujas, de a poco, por todos los lados de la pantalla, y
-//  flotan por todas partes. Con un toque revientan ("¡POP!"). Hay que
-//  reventarlas TODAS para pasar al nivel siguiente.
+//  Van saliendo burbujas, de a poco (por los lados de la pantalla o las
+//  sopla la mascota), y flotan por todas partes. Con un toque revientan
+//  ("¡AY!"). Hay que reventarlas TODAS para pasar al nivel siguiente.
 //
 //  Los niveles no se acaban nunca: cada nivel tiene un poquito más de
 //  burbujas, más rápidas y que giran más, y cada pocos niveles aparece un
-//  tipo de burbuja nuevo (súper, animalito, mega, rápidas, arcoíris). De vez
-//  en cuando, al azar, sale un nivel más tranquilo, para que sienta que
-//  mejora sin frustrarse. El juego recuerda en qué nivel va.
+//  tipo de burbuja nuevo (súper, animalito, mega, rápidas). De vez en
+//  cuando, al azar, sale un nivel más tranquilo, para que sienta que mejora
+//  sin frustrarse, y otras veces un nivel de JEFE (una burbuja gigante).
+//  El juego recuerda en qué nivel va.
+//
+//  Cada nivel pasa en un MUNDO distinto (cielo, mar, atardecer, noche o
+//  espacio), con una MASCOTA abajo que sopla burbujas y aplaude. Las
+//  burbujas tienen CARITA: parpadean, se ríen y dicen "¡ay!" al reventar.
 //
 //  Cómo cambiar algo: cambia el valor que está después del "=" y guarda.
 //  Los textos van entre comillas simples. Los decimales llevan punto (0.3).
@@ -103,11 +108,112 @@ class AjustesBurbujas {
   static const int rapidaMaximo = 6;
   static const double velocidadRapidas = 2.2;
 
-  /// BURBUJA ARCOÍRIS: cambia de colores. Al reventarla revientan TODAS las
-  /// que están en la pantalla. Sale como mucho una por nivel, y no siempre
-  /// ([probabilidadArcoiris]: 0.6 = en 6 de cada 10 niveles).
-  static const int arcoirisDesdeNivel = 11;
-  static const double probabilidadArcoiris = 0.6;
+  // ------------------------------------------------- niveles de jefe
+  //
+  // De vez en cuando sale un nivel de JEFE: una burbuja gigante que hay que
+  // tocar muchas veces. Con cada toque se achica, se ríe y suelta
+  // burbujitas; al final explota en muchas burbujitas más. Vienen unas
+  // pocas burbujas normales con él.
+
+  /// Desde qué nivel salen jefes (0 = nunca). En ese nivel sale siempre el
+  /// primero de la lista [jefes].
+  static const int jefeDesdeNivel = 4;
+
+  /// Qué tan seguido: 0.25 = más o menos 1 de cada 4 niveles. Nunca hay
+  /// dos niveles de jefe seguidos, y si pasan [nivelesSinJefeMaximo]
+  /// niveles sin jefe, el siguiente lo tiene seguro.
+  static const double probabilidadJefe = 0.25;
+  static const int nivelesSinJefeMaximo = 6;
+
+  /// Los jefes (borra uno de la lista para que no salga):
+  ///  - 'rey': el REY BURBUJA, con corona. Se achica con cada toque.
+  ///  - 'saltarina': con orejas de conejo; con cada toque salta a otro lado.
+  ///  - 'dormilona': con gorro de dormir; duerme (va lentito) y al tocarla
+  ///    se despierta riéndose y corre un ratito.
+  ///  - 'pinata': una piñata de colores; con cada toque se sacude y le caen
+  ///    burbujitas de dulce.
+  static const List<String> jefes = <String>[
+    'rey',
+    'saltarina',
+    'dormilona',
+    'pinata',
+  ];
+
+  /// Cuántos toques necesita el jefe: al empezar, uno más cada
+  /// [nivelesParaUnToqueMas] niveles, y el máximo.
+  static const int toquesJefeAlEmpezar = 6;
+  static const int nivelesParaUnToqueMas = 6;
+  static const int toquesJefeMaximo = 9;
+
+  /// Cuántas burbujitas suelta el jefe con cada toque, y cuántas al
+  /// reventar.
+  static const int burbujitasPorToqueJefe = 1;
+  static const int burbujitasAlReventarJefe = 6;
+
+  /// Cuántas burbujas normales vienen con el jefe.
+  static const int normalesConJefe = 3;
+
+  /// El tamaño del jefe al llegar (parte del ancho de la pantalla), y qué
+  /// tan chiquito queda al final (0.45 = casi la mitad).
+  static const double tamanoJefe = 0.6;
+  static const double jefeAchicaHasta = 0.45;
+
+  // ------------------------------------------------------------ mundos
+  //
+  // Cada nivel pasa en un mundo distinto, elegido al azar (nunca el mismo
+  // dos veces seguidas). Los mundos que hay:
+  //  'cielo' (de día, con sol y nubes), 'mar' (el fondo del mar, con
+  //  peces), 'atardecer', 'noche' (con luna y estrellas) y 'espacio'
+  //  (planetas y estrellas fugaces).
+  // Para que uno no salga, bórralo de la lista.
+
+  static const List<String> mundos = <String>[
+    'cielo',
+    'mar',
+    'atardecer',
+    'noche',
+    'espacio',
+  ];
+
+  // ---------------------------------------------------------- mascotas
+  //
+  // Abajo, en cada mundo, hay una mascota (elegida al azar entre las de ese
+  // mundo) que sopla burbujas, se ríe si la tocas y aplaude al pasar de
+  // nivel. En el espacio, el perrito lleva casco de astronauta.
+
+  static const Map<String, List<String>> mascotas = <String, List<String>>{
+    'cielo': <String>['🐥', '🐶'],
+    'mar': <String>['🐳'],
+    'atardecer': <String>['🐱', '🐶'],
+    'noche': <String>['🐱'],
+    'espacio': <String>['🐶'],
+  };
+
+  /// Cómo se llama cada mascota (para la voz).
+  static const Map<String, String> nombresMascotas = <String, String>{
+    '🐥': 'el pollito',
+    '🐶': 'el perrito',
+    '🐱': 'el gatito',
+    '🐳': 'la ballenita',
+  };
+
+  /// Cuántas burbujas sopla la mascota (las demás salen por los lados).
+  /// 0.6 = 6 de cada 10. 0 = ninguna (todas por los lados).
+  static const double parteQueSoplaLaMascota = 0.6;
+
+  /// true = se ve la mascota.
+  static const bool conMascota = true;
+
+  // ------------------------------------------------------------ caritas
+
+  /// true = las burbujas tienen carita (ojos que parpadean y sonrisa). Se
+  /// ríen cuando las tocas sin reventarlas (súper, mega y jefes) y cuando
+  /// revienta una que está al lado.
+  static const bool caritas = true;
+
+  /// La palabra que sale al reventar una burbuja con carita (y "¡POP!" si
+  /// no tiene).
+  static const String palabraAlReventar = '¡AY!';
 
   // -------------------------------------------------------------- tamaños
   //
@@ -120,7 +226,6 @@ class AjustesBurbujas {
   static const double tamanoAnimalito = 0.27;
   static const double tamanoMega = 0.46;
   static const double tamanoChica = 0.13; // rápidas y las de la mega
-  static const double tamanoArcoiris = 0.28;
 
   /// Cada cuánto sale una burbuja nueva (en segundos, al azar entre estos
   /// dos números), mientras haya lugar en la pantalla.
@@ -139,7 +244,8 @@ class AjustesBurbujas {
     'Naranja',
   ];
 
-  /// true = al reventar sale la palabra "¡POP!" de colores.
+  /// true = al reventar sale la palabra de colores ("¡AY!", o "¡POP!" si
+  /// no tiene carita).
   static const bool mostrarPop = true;
 
   // ------------------------------------------------------- entre niveles
@@ -168,8 +274,25 @@ class AjustesBurbujas {
   static const String vozAnimalito = '¡Burbujas con animalitos!';
   static const String vozMega = '¡Mega burbujas! ¡Tienen burbujitas adentro!';
   static const String vozRapida = '¡Burbujitas rápidas! ¡Atrápalas!';
-  static const String vozArcoiris =
-      '¡La burbuja arcoíris revienta todas las burbujas!';
+
+  /// Cuando llega un jefe.
+  static const Map<String, String> vozJefes = <String, String>{
+    'rey': '¡Llegó el Rey Burbuja! ¡Tócalo muchas veces!',
+    'saltarina': '¡La Burbuja Saltarina! ¡Atrápala!',
+    'dormilona': '¡La Burbuja Dormilona! ¡Despiértala!',
+    'pinata': '¡La Burbuja Piñata! ¡Tiene burbujitas de dulce!',
+  };
+
+  /// Al empezar cada nivel, después del número, dice a qué mundo van
+  /// ({mascota} = el nombre de la mascota). Si el nivel trae una burbuja
+  /// nueva o un jefe, dice eso en vez del mundo.
+  static const Map<String, String> vozMundos = <String, String>{
+    'cielo': '¡Al cielo con {mascota}!',
+    'mar': '¡Al fondo del mar con {mascota}!',
+    'atardecer': '¡Mira el atardecer con {mascota}!',
+    'noche': '¡A la noche de estrellas con {mascota}!',
+    'espacio': '¡Al espacio con {mascota}!',
+  };
 
   /// Al terminar un nivel (una al azar).
   static const List<String> vozMuyBien = <String>[
@@ -193,7 +316,8 @@ class AjustesBurbujas {
   // Están en assets/sonidos/. Para cambiarlos, pon otro archivo con el
   // mismo nombre (o cambia aquí el nombre).
 
-  /// Al reventar una burbuja suena uno de estos (van turnándose).
+  /// Al reventar una burbuja SIN carita suena uno de estos (van
+  /// turnándose). Las que tienen carita usan [sonidosAy].
   static const List<String> sonidosPop = <String>[
     'burbujas/pop1.wav',
     'burbujas/pop2.wav',
@@ -204,9 +328,33 @@ class AjustesBurbujas {
   /// Cada toque a una súper burbuja o a una mega (antes de reventar).
   static const String sonidoSuperToque = 'burbujas/super_toque.wav';
 
-  /// La súper burbuja, la mega o la arcoíris que revientan.
+  /// La súper burbuja, la mega o un jefe que revientan.
   static const String sonidoSuperPop = 'burbujas/super_pop.wav';
 
   /// El animalito que sale volando.
   static const String sonidoAnimalito = 'comunes/acierto.wav';
+
+  /// Las burbujas con carita que revientan diciendo "¡ay!" (van
+  /// turnándose). Si borras todos los nombres, suenan los pop de arriba.
+  static const List<String> sonidosAy = <String>[
+    'burbujas/ay1.wav',
+    'burbujas/ay2.wav',
+    'burbujas/ay3.wav',
+    'burbujas/ay4.wav',
+  ];
+
+  /// La risita ("¡jiji!") de las burbujas y de la mascota.
+  static const String sonidoRisa = 'burbujas/jiji.wav';
+
+  /// La mascota que sopla una burbuja (suavecito).
+  static const String sonidoSoplo = 'burbujas/soplo.wav';
+
+  /// La mascota que aplaude al pasar de nivel.
+  static const String sonidoAplausos = 'burbujas/aplausos.wav';
+
+  /// La música cuando llega un jefe.
+  static const String sonidoJefe = 'burbujas/jefe.wav';
+
+  /// La Burbuja Saltarina cuando salta.
+  static const String sonidoSalto = 'comunes/boing.wav';
 }

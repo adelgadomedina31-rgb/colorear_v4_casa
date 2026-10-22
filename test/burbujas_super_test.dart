@@ -1,5 +1,6 @@
 import 'package:colorear_ninos/juegos/burbujas/burbujas_ajustes.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbujas_juego.dart';
+import 'package:colorear_ninos/juegos/burbujas/carita.dart';
 import 'package:colorear_ninos/juegos/burbujas/niveles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +38,7 @@ void main() {
       expect(juego.burbujas, contains(dorada), reason: 'todavía no revienta');
       expect(dorada.toques, AjustesBurbujas.toquesSuper - k);
       expect(dorada.radio, lessThan(radio), reason: 'se achica');
+      expect(dorada.gesto(dorada.risa), Gesto.risa, reason: 'y se ríe');
       expect(juego.reventadas, antes);
     }
     await tocarBurbuja(tester, dorada);

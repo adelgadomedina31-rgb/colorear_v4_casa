@@ -11,7 +11,7 @@ tarjetas grandes, una por juego. Al tocar una, la voz dice su nombre y el juego 
 | 🎨 **Pintar** | Colores, motricidad | Elige un color y pinta los dibujos con toques. Dos modos de pintar. | `lib/juegos/pintar/` |
 | 🎈 **Colores** | Nombres de los colores | La voz dice "¡Toca el globo rojo!" y ella toca ese globo, que revienta con estrellitas. | `lib/juegos/colores/` |
 | 🐶 **Animales** | Animales y sus sonidos | La voz pregunta "¿Quién hace guau guau?" y ella toca al perro. Cada animal hace su sonido. | `lib/juegos/animales/` |
-| 🫧 **Burbujas** | Motricidad, puntería | Salen burbujas por todos los lados y flotan; con un toque revientan ("¡POP!"). Hay que reventarlas todas. Niveles sin fin (recuerda el nivel), con súper burbujas, animalitos, mega burbujas que explotan en burbujitas, burbujitas rápidas y la arcoíris que revienta todas. | `lib/juegos/burbujas/` |
+| 🫧 **Burbujas** | Motricidad, puntería | Burbujas con carita (parpadean, se ríen y dicen "¡ay!") que salen por los lados o las sopla la mascota; con un toque revientan. Hay que reventarlas todas. Cada nivel en un mundo distinto (cielo, mar, atardecer, noche, espacio). Niveles sin fin (recuerda el nivel), con súper burbujas, animalitos, mega burbujas, burbujitas rápidas y, de vez en cuando, un jefe gigante. | `lib/juegos/burbujas/` |
 | 🍎 **¿Cuántos hay?** | Contar del 1 al 5 | Toca cada cosa y la voz cuenta; después elige el número correcto (con puntitos de ayuda). | `lib/juegos/contar/` |
 
 En todos los juegos:
@@ -104,7 +104,7 @@ Lo que Arleth ya pintó y los dibujos agregados desde el celular se conservan, p
   - `pintar/`: las gotas y el pincel.
   - `colores/`: el globo que revienta.
   - `animales/`: aquí puedes poner sonidos de verdad de los animales (por ejemplo `perro.mp3`).
-  - `burbujas/`: las burbujas que revientan, las súper y las mega burbujas.
+  - `burbujas/`: las burbujas que revientan ("¡ay!"), las súper, los jefes, la risita y la mascota.
   - `contar/`: las notitas al contar.
 
   Para cambiar un sonido, pon otro archivo con **el mismo nombre** en la misma carpeta. La lista completa está en

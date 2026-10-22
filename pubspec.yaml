@@ -1,7 +1,7 @@
 name: colorear_ninos
 description: ARVI - app para colorear sin anuncios y sin internet, pensada para una niña de 3 años.
 publish_to: 'none'
-version: 12.0.0+12
+version: 13.0.0+13
 
 environment:
   sdk: '>=3.6.0 <4.0.0'

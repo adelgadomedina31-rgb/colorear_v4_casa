@@ -31,11 +31,19 @@ void main() {
     expect(burbujasFaltan(tester), total);
     expect(juego.burbujas, isEmpty);
 
-    // Van saliendo de a una, desde afuera de la pantalla.
+    // Van saliendo de a una: desde afuera de la pantalla, o la sopla la
+    // mascota desde abajo (chiquita, y va creciendo).
     await avanzar(tester, const Duration(milliseconds: 680));
     expect(juego.burbujas, hasLength(1));
-    expect(estaAdentro(tester, juego.burbujas.first), isFalse,
-        reason: 'sale desde afuera de la pantalla');
+    final primera = juego.burbujas.first;
+    if (primera.soplada) {
+      final boca = juego.mascota!.boca(zonaBurbujas(tester).size);
+      expect((primera.centro - boca).distance, lessThan(primera.radio),
+          reason: 'sale de la boca de la mascota');
+    } else {
+      expect(estaAdentro(tester, primera), isFalse,
+          reason: 'sale desde afuera de la pantalla');
+    }
 
     // El cartel del nivel se va rápido (en 1 segundo).
     await avanzar(tester, const Duration(milliseconds: 400));
@@ -51,6 +59,7 @@ void main() {
       expect(juego.burbujas.length, lessThanOrEqualTo(aLaVez));
       for (final b in juego.burbujas) {
         final c = b.centro;
+        if (b.soplada) lados.add('mascota');
         if (c.dx < 0) lados.add('izquierda');
         if (c.dx > tam.width) lados.add('derecha');
         if (c.dy < 0) lados.add('arriba');
@@ -115,7 +124,7 @@ void main() {
             milliseconds:
                 (AjustesBurbujas.segundosFestejoCorto * 1000).round()));
     expect(juego.nivel, 2);
-    expect(frases.last, '¡Nivel 2!');
+    expect(frases.last, startsWith('¡Nivel 2!'));
     expect(find.text('NIVEL 2'), findsOneWidget);
     expect(juego.total, greaterThan(total));
     expect(burbujasFaltan(tester), juego.total);

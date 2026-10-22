@@ -46,10 +46,14 @@ lib/
     │   └── animales_juego.dart  cómo se juega y cómo se ve
     ├── burbujas/ .............. 🫧 Burbujas (revienta todas las burbujas)
     │   ├── LEEME.md
-    │   ├── burbujas_ajustes.dart ⭐ (cómo suben los niveles y los tipos de burbuja)
-    │   ├── niveles.dart ....... arma cada nivel (los niveles no se acaban)
+    │   ├── burbujas_ajustes.dart ⭐ (niveles, tipos de burbuja, jefes, mundos, mascotas)
+    │   ├── niveles.dart ....... arma cada nivel (los niveles no se acaban; los de jefe)
     │   ├── burbujas_juego.dart  cómo se juega, cómo se mueven y cómo se ve
     │   ├── burbuja.dart ....... cómo se dibuja cada burbuja y su explosión
+    │   ├── carita.dart ........ las caritas de las burbujas y lo que lleva cada jefe
+    │   ├── mundos.dart ........ los fondos: cielo, mar, atardecer, noche y espacio
+    │   ├── mascota.dart ....... la mascota de abajo (sopla, salta y aplaude)
+    │   ├── dibujos.dart ....... letras y emojis ya preparados (para que vaya fluido)
     │   └── burbujas_papas.dart  guarda el nivel; "Volver al nivel 1" en Ajustes
     └── contar/ ................ 🍎 ¿Cuántos hay? (contar del 1 al 5)
         ├── LEEME.md

@@ -3,6 +3,7 @@
 library;
 
 import 'package:colorear_ninos/juegos/animales/animales_ajustes.dart';
+import 'package:colorear_ninos/juegos/burbujas/burbujas_ajustes.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbuja.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbujas_juego.dart';
 import 'package:colorear_ninos/juegos/burbujas/niveles.dart';
@@ -136,7 +137,8 @@ Future<void> tocarBurbuja(WidgetTester tester, Burbuja b) async {
 }
 
 /// Espera hasta que haya una burbuja del tipo [tipo] entera en la pantalla.
-/// Mientras tanto revienta las de otros tipos (para que haya lugar).
+/// Mientras tanto revienta las de otros tipos (para que haya lugar; a los
+/// jefes no los toca).
 Future<Burbuja> esperarBurbuja(WidgetTester tester, TipoBurbuja tipo,
     {int segundos = 60}) async {
   for (var k = 0; k < segundos * 25; k++) {
@@ -144,7 +146,7 @@ Future<Burbuja> esperarBurbuja(WidgetTester tester, TipoBurbuja tipo,
     for (final b in adentro) {
       if (b.tipo == tipo) return b;
     }
-    final otra = adentro.where((b) => b.tipo != TipoBurbuja.arcoiris);
+    final otra = adentro.where((b) => b.tipo != TipoBurbuja.jefe);
     if (otra.isNotEmpty) {
       await tocarBurbuja(tester, otra.first);
     } else {
@@ -176,6 +178,33 @@ Future<void> reventarBurbujas(WidgetTester tester, int cuantas,
 /// Revienta todas las burbujas del nivel.
 Future<void> reventarTodas(WidgetTester tester) =>
     reventarBurbujas(tester, juegoBurbujas(tester).total);
+
+/// Revienta todas y espera a que empiece el nivel siguiente (también si
+/// hay celebración grande).
+Future<void> pasarDeNivel(WidgetTester tester) async {
+  final juego = juegoBurbujas(tester);
+  final nivel = juego.nivel;
+  await reventarTodas(tester);
+  for (var k = 0; k < 300 && juego.nivel == nivel; k++) {
+    await tester.pump(const Duration(milliseconds: 40));
+  }
+  expect(juego.nivel, nivel + 1);
+}
+
+/// Abre un nivel del jefe [jefe] (en el nivel 12) y espera a que entre a la
+/// pantalla.
+Future<Burbuja> abrirJefe(WidgetTester tester, TipoJefe jefe) async {
+  sinAvisosDeSonido();
+  await tester.binding.setSurfaceSize(const Size(420, 860));
+  await tester.pumpWidget(MaterialApp(
+      home: BurbujasJuego(nivelInicial: 12, semilla: 5, jefe: jefe)));
+  await tester.pump(const Duration(milliseconds: 100));
+  expect(juegoBurbujas(tester).plan!.jefe, jefe);
+  expect(frases.last, AjustesBurbujas.vozJefes[jefe.name]);
+  final b = await esperarBurbuja(tester, TipoBurbuja.jefe);
+  expect(b.jefe, jefe);
+  return b;
+}
 
 // ------------------------------------------------------------------- Contar
 

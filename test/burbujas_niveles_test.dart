@@ -7,12 +7,25 @@ import 'package:flutter_test/flutter_test.dart';
 /// Los niveles de Burbujas: no se acaban, suben de a poco (con niveles
 /// tranquilos al azar) y cada pocos niveles aparece algo nuevo.
 void main() {
-  /// Los planes de los niveles 1 a [hasta], jugados con la semilla [semilla].
+  /// Los planes de los niveles 1 a [hasta], jugados con la semilla
+  /// [semilla] (como en el juego: recordando cuándo salió el último jefe).
   List<PlanNivel> jugar(int semilla, int hasta) {
     final azar = math.Random(semilla);
-    return <PlanNivel>[
-      for (var n = 1; n <= hasta; n++) PlanNivel.para(n, azar),
-    ];
+    var sinJefe = 1;
+    TipoJefe? ultimo;
+    final planes = <PlanNivel>[];
+    for (var n = 1; n <= hasta; n++) {
+      final p = PlanNivel.para(n, azar,
+          nivelesSinJefe: sinJefe, jefeAnterior: ultimo);
+      if (p.jefe != null) {
+        sinJefe = 0;
+        ultimo = p.jefe;
+      } else {
+        sinJefe++;
+      }
+      planes.add(p);
+    }
+    return planes;
   }
 
   test('El nivel 1 es fácil: pocas burbujas normales, lentas', () {
@@ -33,7 +46,6 @@ void main() {
       for (final p in jugar(semilla, 300)) {
         expect(p.total, lessThanOrEqualTo(AjustesBurbujas.totalMaximo),
             reason: 'nivel ${p.numero}');
-        expect(p.cuantas(TipoBurbuja.normal), greaterThanOrEqualTo(3));
         expect(p.aLaVez, lessThanOrEqualTo(AjustesBurbujas.aLaVezMaximo));
         expect(p.velocidad,
             lessThanOrEqualTo(AjustesBurbujas.velocidadMaxima / 100));
@@ -42,14 +54,22 @@ void main() {
             lessThanOrEqualTo(AjustesBurbujas.superMaximo + 1));
         expect(p.cuantas(TipoBurbuja.mega),
             lessThanOrEqualTo(AjustesBurbujas.megaMaximo + 1));
-        expect(p.cuantas(TipoBurbuja.arcoiris), lessThanOrEqualTo(1));
         expect(p.cuantas(TipoBurbuja.chica), 0,
-            reason: 'las chicas solo salen de las mega');
-        // El orden tiene todas, y las dos primeras son normales.
+            reason: 'las chicas solo salen de las mega y de los jefes');
+        // El orden tiene todas; las dos primeras son normales (o el jefe
+        // primero).
         final orden = p.orden(math.Random(semilla));
-        expect(orden.length,
-            p.total - p.cuantas(TipoBurbuja.mega) * AjustesBurbujas.hijasMega);
-        expect(orden.take(2), everyElement(TipoBurbuja.normal));
+        expect(
+            orden.length,
+            p.total -
+                p.cuantas(TipoBurbuja.mega) * AjustesBurbujas.hijasMega -
+                p.burbujitasDelJefe);
+        if (p.jefe == null) {
+          expect(orden.take(2), everyElement(TipoBurbuja.normal));
+          expect(p.cuantas(TipoBurbuja.normal), greaterThanOrEqualTo(3));
+        } else {
+          expect(orden.first, TipoBurbuja.jefe);
+        }
       }
     }
   });
@@ -60,7 +80,6 @@ void main() {
       TipoBurbuja.animalito: AjustesBurbujas.animalitoDesdeNivel,
       TipoBurbuja.mega: AjustesBurbujas.megaDesdeNivel,
       TipoBurbuja.rapida: AjustesBurbujas.rapidaDesdeNivel,
-      TipoBurbuja.arcoiris: AjustesBurbujas.arcoirisDesdeNivel,
     };
     // Uno nuevo a lo más cada 5 niveles (o menos).
     final niveles = desde.values.toList()..sort();
@@ -76,7 +95,7 @@ void main() {
           } else if (p.numero == nivel) {
             expect(p.cuantas(tipo), 1, reason: 'la primera vez sale una $tipo');
             expect(p.nuevos, <TipoBurbuja>[tipo]);
-          } else if (tipo != TipoBurbuja.arcoiris) {
+          } else if (p.jefe == null) {
             expect(p.cuantas(tipo), greaterThanOrEqualTo(1),
                 reason: 'desde que sale, sale siempre: $tipo, ${p.numero}');
           }
@@ -92,14 +111,21 @@ void main() {
     final totales = List<double>.filled(41, 0);
     final rapidez = List<double>.filled(41, 0);
     final especiales = List<double>.filled(41, 0);
+    final cuantos = List<int>.filled(41, 0);
     for (var semilla = 0; semilla < partidas; semilla++) {
       for (final p in jugar(semilla, 40)) {
-        totales[p.numero] += p.total / partidas;
         rapidez[p.numero] += p.velocidad / partidas;
+        if (p.jefe != null) continue; // los de jefe son distintos
+        cuantos[p.numero]++;
+        totales[p.numero] += p.total;
         for (final t in PlanNivel.especiales) {
-          especiales[p.numero] += p.cuantas(t) / partidas;
+          especiales[p.numero] += p.cuantas(t);
         }
       }
+    }
+    for (var n = 1; n <= 40; n++) {
+      totales[n] /= math.max(1, cuantos[n]);
+      especiales[n] /= math.max(1, cuantos[n]);
     }
     // Más burbujas hasta llegar al máximo (nivel 12 más o menos)...
     for (var n = 1; n + 5 <= 12; n++) {
@@ -153,5 +179,77 @@ void main() {
             .join(','),
     };
     expect(distintos.length, greaterThanOrEqualTo(4));
+  });
+
+  test('De vez en cuando, un nivel de jefe (nunca dos seguidos)', () {
+    final jefes = TipoJefe.deLosAjustes;
+    expect(jefes.first, TipoJefe.rey);
+    var deJefe = 0;
+    var niveles = 0;
+    final vistos = <TipoJefe>{};
+    for (var semilla = 0; semilla < 100; semilla++) {
+      final planes = jugar(semilla, 60);
+      var sinJefe = 0;
+      TipoJefe? anterior;
+      for (final p in planes) {
+        final jefe = p.jefe;
+        if (p.numero < AjustesBurbujas.jefeDesdeNivel) {
+          expect(jefe, isNull);
+          sinJefe++;
+          continue;
+        }
+        if (p.numero == AjustesBurbujas.jefeDesdeNivel) {
+          expect(jefe, TipoJefe.rey, reason: 'el primero es el Rey Burbuja');
+        }
+        niveles++;
+        if (jefe == null) {
+          sinJefe++;
+          expect(sinJefe,
+              lessThanOrEqualTo(AjustesBurbujas.nivelesSinJefeMaximo + 3),
+              reason: 'no pasan muchos niveles sin jefe');
+          continue;
+        }
+        deJefe++;
+        vistos.add(jefe);
+        expect(p.nuevos, isEmpty, reason: 'no cuando sale una burbuja nueva');
+        expect(sinJefe, greaterThan(0),
+            reason: 'nunca dos niveles de jefe seguidos (${p.numero})');
+        expect(jefe, isNot(anterior), reason: 'no se repite el mismo jefe');
+        anterior = jefe;
+        sinJefe = 0;
+        // El jefe y unas pocas normales; las burbujitas que suelta cuentan.
+        expect(p.cuantas(TipoBurbuja.jefe), 1);
+        expect(p.cuantas(TipoBurbuja.normal), AjustesBurbujas.normalesConJefe);
+        for (final t in PlanNivel.especiales) {
+          expect(p.cuantas(t), 0);
+        }
+        expect(p.toquesJefe,
+            inInclusiveRange(2, AjustesBurbujas.toquesJefeMaximo));
+        expect(
+            p.toquesJefe,
+            greaterThanOrEqualTo(math.min(AjustesBurbujas.toquesJefeAlEmpezar,
+                AjustesBurbujas.toquesJefeMaximo)));
+        expect(
+            p.total,
+            1 +
+                AjustesBurbujas.normalesConJefe +
+                (p.toquesJefe - 1) * AjustesBurbujas.burbujitasPorToqueJefe +
+                AjustesBurbujas.burbujitasAlReventarJefe);
+      }
+    }
+    expect(vistos, jefes.toSet(), reason: 'salen todos los jefes');
+    // Más o menos 1 de cada 4 o 5 niveles.
+    expect(deJefe / niveles, inInclusiveRange(0.15, 0.3));
+  });
+
+  test('Los jefes piden más toques en los niveles altos', () {
+    final bajo = PlanNivel.deJefe(AjustesBurbujas.jefeDesdeNivel, TipoJefe.rey);
+    final alto = PlanNivel.deJefe(60, TipoJefe.rey);
+    expect(bajo.toquesJefe, AjustesBurbujas.toquesJefeAlEmpezar);
+    expect(alto.toquesJefe, AjustesBurbujas.toquesJefeMaximo);
+    expect(alto.total, lessThanOrEqualTo(AjustesBurbujas.totalMaximo));
+    for (final j in TipoJefe.values) {
+      expect(PlanNivel.deJefe(10, j).jefe, j);
+    }
   });
 }

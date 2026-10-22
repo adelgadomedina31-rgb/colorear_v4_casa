@@ -4,7 +4,12 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'package:colorear_ninos/juegos/burbujas/burbujas_ajustes.dart';
+import 'package:colorear_ninos/juegos/burbujas/carita.dart';
+import 'package:colorear_ninos/juegos/burbujas/dibujos.dart';
 import 'package:colorear_ninos/juegos/burbujas/niveles.dart';
+
+export 'package:colorear_ninos/juegos/burbujas/dibujos.dart' show estrella;
 
 /// Una burbuja que flota por la pantalla.
 class Burbuja {
@@ -20,7 +25,10 @@ class Burbuja {
     this.nace = -10,
     this.toques = 1,
     this.animal,
-  }) : toquesTotales = toques;
+    this.jefe,
+    this.soplada = false,
+  })  : toquesTotales = toques,
+        radioInicial = radio;
 
   /// Número único (para reconocerla).
   final int id;
@@ -32,6 +40,9 @@ class Burbuja {
 
   /// Su tamaño (la mitad de lo que mide de lado a lado).
   double radio;
+
+  /// El tamaño que tenía al salir.
+  final double radioInicial;
 
   final Color color;
 
@@ -56,6 +67,29 @@ class Burbuja {
   /// El animalito de adentro (solo las de tipo animalito).
   final String? animal;
 
+  /// Qué jefe es (solo las de tipo jefe).
+  final TipoJefe? jefe;
+
+  /// true = la sopló la mascota.
+  final bool soplada;
+
+  /// Cuándo se rió por última vez (segundos del juego).
+  double risa = -10;
+
+  /// La dormilona: hasta cuándo está despierta.
+  double despiertaHasta = -10;
+
+  /// La saltarina: de dónde a dónde salta, y cuándo empezó el salto.
+  Offset saltoDesde = Offset.zero;
+  Offset saltoHasta = Offset.zero;
+  double saltoInicio = -10;
+
+  /// Cuánto dura un salto de la saltarina (segundos).
+  static const double duracionSalto = 0.45;
+
+  /// Cuánto dura la risa (segundos).
+  static const double duracionRisa = 0.9;
+
   /// Cuánto está girando ahora y hacia dónde quiere girar (radianes por
   /// segundo), y cuándo cambia de idea (segundos del juego).
   double giro = 0;
@@ -73,6 +107,34 @@ class Burbuja {
 
   /// Las chiquitas se pueden tocar con un poco más de ayuda alrededor.
   bool get chiquita => tipo == TipoBurbuja.rapida || tipo == TipoBurbuja.chica;
+
+  /// true = tiene carita (todas menos las de animalito).
+  bool get conCarita =>
+      AjustesBurbujas.caritas && tipo != TipoBurbuja.animalito;
+
+  /// Cuánto se asoma por arriba (los jefes llevan corona, orejas o gorro):
+  /// así rebota antes de que se le corte lo de arriba.
+  double get margenArriba =>
+      radio *
+      switch (jefe) {
+        TipoJefe.rey => 1.4,
+        TipoJefe.saltarina => 1.85,
+        TipoJefe.dormilona || TipoJefe.pinata => 1.3,
+        null => 1.0,
+      };
+
+  bool despierta(double ahora) => ahora < despiertaHasta;
+
+  bool saltando(double ahora) => ahora - saltoInicio < duracionSalto;
+
+  bool riendo(double ahora) => ahora - risa < duracionRisa;
+
+  /// La cara que tiene ahora.
+  Gesto gesto(double ahora) {
+    if (jefe == TipoJefe.dormilona && !despierta(ahora)) return Gesto.dormida;
+    if (riendo(ahora) || saltando(ahora)) return Gesto.risa;
+    return Gesto.normal;
+  }
 }
 
 /// Una explosión de burbuja: un anillo que se agranda, gotitas, papelitos,
@@ -87,6 +149,7 @@ class Estallido {
     this.chico = false,
     this.arcoiris = false,
     this.conPalabra = true,
+    this.carita = false,
   });
 
   final Offset centro;
@@ -96,7 +159,7 @@ class Estallido {
   /// Cuándo empezó (segundos del juego).
   final double inicio;
 
-  /// true = la de una súper, mega o arcoíris (más gotitas y estrellas).
+  /// true = la de una súper, mega o jefe (más gotitas y estrellas).
   final bool grande;
 
   /// true = solo un destello (un toque que todavía no la revienta).
@@ -105,8 +168,12 @@ class Estallido {
   /// true = de todos los colores.
   final bool arcoiris;
 
-  /// true = sale la palabra "¡POP!" (o "¡PUM!" si es grande).
+  /// true = sale la palabra "¡POP!" (o "¡PUM!" si es grande, o "¡AY!" si
+  /// tenía carita).
   final bool conPalabra;
+
+  /// true = la burbuja tenía carita: dice "¡ay!" al reventar.
+  final bool carita;
 
   double get duracion => grande ? 1.1 : (chico ? 0.4 : 0.75);
 
@@ -125,98 +192,6 @@ class AnimalLibre {
   static const double duracion = 1.8;
 
   bool terminado(double ahora) => ahora - inicio >= duracion;
-}
-
-// =============================================================================
-//  Dibujos ya hechos (letras y emojis): se dibujan una sola vez y después se
-//  reutilizan, para que el juego vaya fluido.
-// =============================================================================
-
-class _Dibujos {
-  static final Map<String, ui.Image?> _imagenes = <String, ui.Image?>{};
-
-  /// La palabra [texto] con borde blanco, de color [color] (64 px de alto).
-  static ui.Image? palabra(String texto, Color color, TextStyle? letra) {
-    final clave = 'p|$texto|${color.toARGB32()}|${letra?.fontFamily}';
-    return _imagenes.putIfAbsent(clave, () {
-      final pintores = <TextPainter>[
-        for (final borde in <bool>[true, false])
-          TextPainter(
-            text: TextSpan(
-              text: texto,
-              style: TextStyle(
-                fontFamily: letra?.fontFamily,
-                fontFamilyFallback: letra?.fontFamilyFallback,
-                fontSize: 64,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-                foreground: borde
-                    ? (Paint()
-                      ..style = PaintingStyle.stroke
-                      ..strokeWidth = 10
-                      ..strokeJoin = StrokeJoin.round
-                      ..color = Colors.white)
-                    : (Paint()..color = color),
-              ),
-            ),
-            textDirection: TextDirection.ltr,
-          )..layout(),
-      ];
-      return _foto(pintores, 8);
-    });
-  }
-
-  /// Un emoji (96 px).
-  static ui.Image? emoji(String emoji, TextStyle? letra) {
-    final clave = 'e|$emoji|${letra?.fontFamily}';
-    return _imagenes.putIfAbsent(clave, () {
-      final pintor = TextPainter(
-        text: TextSpan(
-          text: emoji,
-          style: TextStyle(
-            fontFamily: letra?.fontFamily,
-            fontFamilyFallback: letra?.fontFamilyFallback,
-            fontSize: 96,
-            height: 1.1,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      return _foto(<TextPainter>[pintor], 4);
-    });
-  }
-
-  static ui.Image? _foto(List<TextPainter> pintores, double margen) {
-    try {
-      final w = pintores.first.width + margen * 2;
-      final h = pintores.first.height + margen * 2;
-      final grabadora = ui.PictureRecorder();
-      final canvas = Canvas(grabadora);
-      for (final p in pintores) {
-        p.paint(canvas, Offset(margen, margen));
-      }
-      final foto = grabadora.endRecording();
-      final imagen = foto.toImageSync(w.ceil(), h.ceil());
-      foto.dispose();
-      return imagen;
-    } catch (_) {
-      return null;
-    }
-  }
-}
-
-/// Dibuja [imagen] centrada en [c], con [alto] de alto y [opacidad].
-void _dibujarImagen(
-    Canvas canvas, ui.Image imagen, Offset c, double alto, double opacidad) {
-  final ancho = alto * imagen.width / imagen.height;
-  canvas.drawImageRect(
-    imagen,
-    Rect.fromLTWH(0, 0, imagen.width.toDouble(), imagen.height.toDouble()),
-    Rect.fromCenter(center: c, width: ancho, height: alto),
-    Paint()
-      ..filterQuality = FilterQuality.medium
-      ..color = Color.fromRGBO(255, 255, 255, opacidad.clamp(0.0, 1.0)),
-  );
 }
 
 // =============================================================================
@@ -269,32 +244,67 @@ void pintarBurbuja(Canvas canvas, Burbuja b, double ahora, {TextStyle? letra}) {
   canvas.translate(b.centro.dx, b.centro.dy);
   canvas.scale(ex, ey);
 
+  final jefe = b.jefe;
   switch (b.tipo) {
     case TipoBurbuja.superBurbuja:
       _resplandor(canvas, r, const Color(0xFFFFD54F), ahora, b.fase);
-    case TipoBurbuja.arcoiris:
-      _resplandor(canvas, r, _arcoiris[(ahora * 3).floor() % 6], ahora, b.fase);
+    case TipoBurbuja.jefe:
+      _resplandor(canvas, r, color, ahora, b.fase);
     case TipoBurbuja.rapida:
       _resplandor(canvas, r, Colors.white, ahora, b.fase);
     default:
       break;
   }
+  if (jefe != null) pintarJefeAtras(canvas, jefe, r, ahora);
 
   _cuerpo(canvas, b, r, color, ahora);
+  if (jefe == TipoJefe.pinata) pintarRayasPinata(canvas, r, ahora);
+
+  if (b.conCarita) {
+    pintarCarita(
+      canvas,
+      r,
+      b.gesto(ahora),
+      parpadea: parpadeando(ahora, b.fase),
+      mira: Offset(math.cos(b.rumbo), math.sin(b.rumbo)),
+    );
+  }
 
   switch (b.tipo) {
     case TipoBurbuja.superBurbuja:
+      // Una estrella dorada en la frente.
       final latido = 1 + 0.08 * math.sin(ahora * 6 + b.fase);
-      _estrellaDorada(canvas, Offset(0, -r * 0.05), r * 0.36 * latido);
-      _puntitos(canvas, r, b.toques, r * 0.55, const Color(0xFFFF8F00));
+      _estrellaDorada(canvas, Offset(0, -r * 0.6), r * 0.2 * latido);
+      _puntitos(canvas, r, b.toques, r * 0.66, const Color(0xFFFF8F00));
+    case TipoBurbuja.jefe:
+      if (jefe != null) {
+        pintarJefeAdelante(
+          canvas,
+          jefe,
+          r,
+          ahora,
+          despierta: b.despierta(ahora),
+          letra: letra,
+        );
+      }
+      _puntitos(
+        canvas,
+        r,
+        b.toques,
+        r * 0.68,
+        Color.lerp(color, Colors.black, 0.3)!,
+      );
     case TipoBurbuja.mega:
-      // Burbujitas que dan vueltas adentro.
+      // Burbujitas que dan vueltas alrededor de la carita.
       for (var i = 0; i < 4; i++) {
         final a = ahora * 0.8 + b.fase + i * math.pi / 2;
-        final p = Offset(math.cos(a), math.sin(a)) * r * 0.42;
-        final rr = r * 0.2;
+        final p = Offset(math.cos(a), math.sin(a)) * r * 0.7;
+        final rr = r * 0.13;
         canvas.drawCircle(
-            p, rr, Paint()..color = _arcoiris[i + 1].withValues(alpha: 0.45));
+          p,
+          rr,
+          Paint()..color = _arcoiris[i + 1].withValues(alpha: 0.45),
+        );
         canvas.drawCircle(
           p,
           rr,
@@ -303,30 +313,27 @@ void pintarBurbuja(Canvas canvas, Burbuja b, double ahora, {TextStyle? letra}) {
             ..strokeWidth = r * 0.025
             ..color = Colors.white.withValues(alpha: 0.9),
         );
-        canvas.drawCircle(p + Offset(-rr * 0.35, -rr * 0.35), rr * 0.25,
-            Paint()..color = Colors.white);
+        canvas.drawCircle(
+          p + Offset(-rr * 0.35, -rr * 0.35),
+          rr * 0.25,
+          Paint()..color = Colors.white,
+        );
       }
-      _puntitos(canvas, r, b.toques, r * 0.78, const Color(0xFF7B1FA2));
+      _puntitos(canvas, r, b.toques, r * 0.52, const Color(0xFF7B1FA2));
     case TipoBurbuja.animalito:
       final animal = b.animal;
       if (animal != null) {
-        final imagen = _Dibujos.emoji(animal, letra);
+        final imagen = Dibujos.emoji(animal, letra);
         if (imagen != null) {
           final salto = math.sin(ahora * 3 + b.fase) * r * 0.06;
-          _dibujarImagen(
-              canvas, imagen, Offset(0, salto + r * 0.05), r * 1.15, 1);
+          dibujarImagen(
+            canvas,
+            imagen,
+            Offset(0, salto + r * 0.05),
+            r * 1.15,
+            1,
+          );
         }
-      }
-    case TipoBurbuja.arcoiris:
-      // Chispitas que brillan alrededor.
-      for (var i = 0; i < 5; i++) {
-        final a = i * 2 * math.pi / 5 + ahora * 1.2;
-        final brillo = 0.5 + 0.5 * math.sin(ahora * 7 + i * 1.7);
-        canvas.drawPath(
-          estrella(Offset(math.cos(a), math.sin(a)) * r * 1.12,
-              r * (0.08 + 0.07 * brillo), r * (0.035 + 0.03 * brillo)),
-          Paint()..color = _arcoiris[i],
-        );
       }
     default:
       break;
@@ -348,7 +355,12 @@ Float64List _girar(double angulo) {
 
 /// Un brillo suave alrededor (sin desenfoque, que es más lento).
 void _resplandor(
-    Canvas canvas, double r, Color color, double ahora, double fase) {
+  Canvas canvas,
+  double r,
+  Color color,
+  double ahora,
+  double fase,
+) {
   final latido = 0.5 + 0.5 * math.sin(ahora * 4 + fase);
   final rr = r * (1.3 + 0.06 * latido);
   canvas.drawCircle(
@@ -370,40 +382,27 @@ void _resplandor(
 
 /// El cuerpo transparente con borde de arcoíris y brillos.
 void _cuerpo(Canvas canvas, Burbuja b, double r, Color color, double ahora) {
-  final esArcoiris = b.tipo == TipoBurbuja.arcoiris;
   canvas.drawCircle(
     Offset.zero,
     r,
     Paint()
-      ..shader = esArcoiris
-          ? ui.Gradient.sweep(
-              Offset.zero,
-              <Color>[for (final c in _arcoiris) c.withValues(alpha: 0.5)],
-              <double>[
-                for (var i = 0; i < _arcoiris.length; i++)
-                  i / (_arcoiris.length - 1),
-              ],
-              TileMode.clamp,
-              0,
-              2 * math.pi,
-              _girar(ahora * 2),
-            )
-          : ui.Gradient.radial(
-              Offset(-r * 0.25, -r * 0.3),
-              r * 1.25,
-              <Color>[
-                Colors.white.withValues(alpha: 0.10),
-                color.withValues(alpha: 0.12),
-                color.withValues(alpha: 0.38),
-                color.withValues(alpha: 0.70),
-              ],
-              <double>[0.0, 0.55, 0.85, 1.0],
-            ),
+      ..shader = ui.Gradient.radial(
+        Offset(-r * 0.25, -r * 0.3),
+        r * 1.25,
+        <Color>[
+          Colors.white.withValues(alpha: 0.10),
+          color.withValues(alpha: 0.12),
+          color.withValues(alpha: 0.38),
+          color.withValues(alpha: 0.70),
+        ],
+        <double>[0.0, 0.55, 0.85, 1.0],
+      ),
   );
 
   // El borde de arcoíris (como el jabón).
   final grueso = switch (b.tipo) {
     TipoBurbuja.superBurbuja || TipoBurbuja.mega => 0.11,
+    TipoBurbuja.jefe => 0.07,
     TipoBurbuja.rapida || TipoBurbuja.chica => 0.12,
     _ => 0.08,
   };
@@ -429,7 +428,7 @@ void _cuerpo(Canvas canvas, Burbuja b, double r, Color color, double ahora) {
         _girar(ahora * 0.6 + b.fase),
       ),
   );
-  if (b.tipo == TipoBurbuja.superBurbuja) {
+  if (b.tipo == TipoBurbuja.superBurbuja || b.jefe == TipoJefe.rey) {
     canvas.drawCircle(
       Offset.zero,
       r,
@@ -446,6 +445,15 @@ void _cuerpo(Canvas canvas, Burbuja b, double r, Color color, double ahora) {
         ..style = PaintingStyle.stroke
         ..strokeWidth = r * 0.035
         ..color = const Color(0xFFAB47BC),
+    );
+  } else if (b.tipo == TipoBurbuja.jefe) {
+    canvas.drawCircle(
+      Offset.zero,
+      r,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.03
+        ..color = Color.lerp(color, Colors.black, 0.15)!,
     );
   }
   // Una línea finita para que se vea bien sobre el cielo claro.
@@ -467,8 +475,11 @@ void _cuerpo(Canvas canvas, Burbuja b, double r, Color color, double ahora) {
     Paint()..color = Colors.white.withValues(alpha: 0.9),
   );
   canvas.restore();
-  canvas.drawCircle(Offset(-r * 0.08, -r * 0.66), r * 0.075,
-      Paint()..color = Colors.white.withValues(alpha: 0.85));
+  canvas.drawCircle(
+    Offset(-r * 0.08, -r * 0.66),
+    r * 0.075,
+    Paint()..color = Colors.white.withValues(alpha: 0.85),
+  );
   if (r > 25) {
     canvas.drawArc(
       Rect.fromCircle(center: Offset.zero, radius: r * 0.74),
@@ -499,7 +510,7 @@ void _estrellaDorada(Canvas canvas, Offset c, double tam) {
 
 /// Puntitos blancos con los toques que le faltan.
 void _puntitos(Canvas canvas, double r, int n, double y, Color borde) {
-  final paso = r * 0.2;
+  final paso = n <= 1 ? r * 0.2 : math.min(r * 0.2, r * 1.1 / (n - 1));
   for (var i = 0; i < n; i++) {
     final p = Offset((i - (n - 1) / 2) * paso, y);
     canvas.drawCircle(p, r * 0.065, Paint()..color = Colors.white);
@@ -528,8 +539,12 @@ const List<Color> _brillos = <Color>[
 ];
 
 /// Dibuja las explosiones que están pasando.
-void pintarEstallidos(Canvas canvas, List<Estallido> estallidos, double ahora,
-    {TextStyle? letra}) {
+void pintarEstallidos(
+  Canvas canvas,
+  List<Estallido> estallidos,
+  double ahora, {
+  TextStyle? letra,
+}) {
   for (final e in estallidos) {
     if (ahora < e.inicio) continue; // todavía no empieza (fuegos en fila)
     final t = ((ahora - e.inicio) / e.duracion).clamp(0.0, 1.0);
@@ -604,7 +619,10 @@ void pintarEstallidos(Canvas canvas, List<Estallido> estallidos, double ahora,
       final p = c + Offset(math.cos(a) * lejos, math.sin(a) * lejos + caida);
       final tamano = r * (0.08 + 0.09 * azar.nextDouble()) * (1 - t * 0.6);
       canvas.drawCircle(
-          p, tamano, Paint()..color = colorDe(i).withValues(alpha: 1 - t));
+        p,
+        tamano,
+        Paint()..color = colorDe(i).withValues(alpha: 1 - t),
+      );
       canvas.drawCircle(
         p + Offset(-tamano * 0.3, -tamano * 0.3),
         tamano * 0.35,
@@ -629,16 +647,37 @@ void pintarEstallidos(Canvas canvas, List<Estallido> estallidos, double ahora,
       canvas.restore();
     }
 
-    // La palabra "¡POP!".
+    // La carita que dice "¡ay!" (se achica y se va enseguida).
+    if (e.carita && t < 0.3) {
+      final f = t / 0.3;
+      canvas.save();
+      canvas.translate(c.dx, c.dy);
+      canvas.scale(1 - 0.5 * f);
+      pintarCarita(canvas, r, Gesto.ay);
+      canvas.restore();
+    }
+
+    // La palabra "¡POP!" (o "¡AY!").
     if (e.conPalabra) {
       final crece = t < 0.25 ? Curves.easeOutBack.transform(t / 0.25) : 1.0;
       final opacidad = t < 0.6 ? 1.0 : (1 - (t - 0.6) / 0.4);
       final alto = r * (e.grande ? 0.95 : 0.7) * crece;
-      final imagen = _Dibujos.palabra(e.grande ? '¡PUM!' : '¡POP!',
-          _brillos[(e.inicio * 10).floor() % _brillos.length], letra);
+      final texto = e.carita
+          ? AjustesBurbujas.palabraAlReventar
+          : (e.grande ? '¡PUM!' : '¡POP!');
+      final imagen = Dibujos.palabra(
+        texto,
+        _brillos[(e.inicio * 10).floor() % _brillos.length],
+        letra,
+      );
       if (alto > 1 && imagen != null) {
-        _dibujarImagen(
-            canvas, imagen, c + Offset(0, -r * 0.35 * sale), alto, opacidad);
+        dibujarImagen(
+          canvas,
+          imagen,
+          c + Offset(0, -r * 0.35 * sale),
+          alto,
+          opacidad,
+        );
       }
     }
   }
@@ -646,12 +685,16 @@ void pintarEstallidos(Canvas canvas, List<Estallido> estallidos, double ahora,
 
 /// Dibuja los animalitos que salieron de sus burbujas: suben moviéndose de
 /// lado a lado, un poco más grandes, y se van apagando.
-void pintarAnimales(Canvas canvas, List<AnimalLibre> animales, double ahora,
-    {TextStyle? letra}) {
+void pintarAnimales(
+  Canvas canvas,
+  List<AnimalLibre> animales,
+  double ahora, {
+  TextStyle? letra,
+}) {
   for (final a in animales) {
     final t = ((ahora - a.inicio) / AnimalLibre.duracion).clamp(0.0, 1.0);
     if (t >= 1) continue;
-    final imagen = _Dibujos.emoji(a.animal, letra);
+    final imagen = Dibujos.emoji(a.animal, letra);
     if (imagen == null) continue;
     final p = a.centro +
         Offset(math.sin(t * math.pi * 4) * a.radio * 0.5, -t * a.radio * 3.2);
@@ -661,33 +704,20 @@ void pintarAnimales(Canvas canvas, List<AnimalLibre> animales, double ahora,
     for (var i = 0; i < 3; i++) {
       final ang = t * 5 + i * 2.1;
       canvas.drawPath(
-        estrella(p + Offset(math.cos(ang), math.sin(ang)) * tam * 0.7,
-            tam * 0.1, tam * 0.045),
+        estrella(
+          p + Offset(math.cos(ang), math.sin(ang)) * tam * 0.7,
+          tam * 0.1,
+          tam * 0.045,
+        ),
         Paint()..color = _brillos[i * 2].withValues(alpha: opacidad),
       );
     }
     canvas.save();
     canvas.translate(p.dx, p.dy);
     canvas.rotate(math.sin(t * math.pi * 6) * 0.2);
-    _dibujarImagen(canvas, imagen, Offset.zero, tam, opacidad);
+    dibujarImagen(canvas, imagen, Offset.zero, tam, opacidad);
     canvas.restore();
   }
-}
-
-/// Una estrella de 5 puntas centrada en [c].
-Path estrella(Offset c, double grande, double chica) {
-  final camino = Path();
-  for (var i = 0; i < 10; i++) {
-    final a = -math.pi / 2 + i * math.pi / 5;
-    final rr = i.isEven ? grande : chica;
-    final p = c + Offset(math.cos(a), math.sin(a)) * rr;
-    if (i == 0) {
-      camino.moveTo(p.dx, p.dy);
-    } else {
-      camino.lineTo(p.dx, p.dy);
-    }
-  }
-  return camino..close();
 }
 
 /// El dibujo de la tarjeta del menú: tres burbujas (se dibujan, no son un
