@@ -175,15 +175,24 @@ class AjustesBurbujas {
     'espacio',
   ];
 
+  /// Fondos animados (Lottie, en assets/fondos/): el mundo que esté aquí se
+  /// ve con esa animación en vez del dibujo de siempre. Se agranda hasta
+  /// llenar la pantalla, con la parte de abajo (la arena) siempre a la vista.
+  /// Bórralo de aquí para volver al fondo del mar dibujado.
+  static const Map<String, String> fondosAnimados = <String, String>{
+    'mar': 'assets/fondos/mar.json',
+  };
+
   // ---------------------------------------------------------- mascotas
   //
   // Abajo, en cada mundo, hay una mascota (elegida al azar entre las de ese
-  // mundo) que sopla burbujas, se ríe si la tocas y aplaude al pasar de
-  // nivel. En el espacio, el perrito lleva casco de astronauta.
+  // mundo) que camina y corre de un lado a otro, sopla burbujas, se ríe si
+  // la tocas y aplaude al pasar de nivel. En el espacio, el perrito lleva
+  // casco de astronauta.
 
   static const Map<String, List<String>> mascotas = <String, List<String>>{
     'cielo': <String>['🐥', '🐶'],
-    'mar': <String>['🐳'],
+    'mar': <String>['🐟'],
     'atardecer': <String>['🐱', '🐶'],
     'noche': <String>['🐱'],
     'espacio': <String>['🐶'],
@@ -194,8 +203,44 @@ class AjustesBurbujas {
     '🐥': 'el pollito',
     '🐶': 'el perrito',
     '🐱': 'el gatito',
+    '🐟': 'el pececito',
     '🐳': 'la ballenita',
   };
+
+  /// La animación de cada mascota (en assets/mascotas/, bajadas de
+  /// lottiefiles.com como "Lottie JSON"). Si una mascota no está aquí (como
+  /// la ballenita), o el archivo no se puede abrir, se ve su emoji.
+  /// Para agregar una nueva, mándale el archivo a Claude: hay que
+  /// prepararlo (recortarlo y decir cómo camina) en mascota.dart.
+  static const Map<String, String> animacionesMascotas = <String, String>{
+    '🐶': 'assets/mascotas/perrito.json',
+    '🐱': 'assets/mascotas/gatito.json',
+    '🐥': 'assets/mascotas/pollito.json',
+    '🐟': 'assets/mascotas/pececito.json',
+  };
+
+  /// Qué tan grande es la mascota: su alto, como parte del lado más corto
+  /// de la pantalla (0.22 = el 22%).
+  static const double tamanoMascota = 0.22;
+
+  /// true = la mascota camina y corre de un lado a otro. false = se queda
+  /// quieta en el medio.
+  static const bool mascotaCamina = true;
+
+  /// Hasta dónde camina: la parte del ancho de la pantalla, en el medio
+  /// (0.7 = el 70%; 1.0 = de borde a borde).
+  static const double zonaDeLaMascota = 0.7;
+
+  /// Cada cuánto corre en vez de caminar (0.3 = 3 de cada 10 paseos).
+  static const double parteQueCorre = 0.3;
+
+  /// Cuánto más rápido va cuando corre (2.0 = el doble).
+  static const double rapidezCorriendo = 1.9;
+
+  /// Cuánto se queda quieta entre un paseo y otro (segundos, al azar entre
+  /// estos dos números).
+  static const double segundosQuietaMinimo = 0.8;
+  static const double segundosQuietaMaximo = 2.5;
 
   /// Cuántas burbujas sopla la mascota (las demás salen por los lados).
   /// 0.6 = 6 de cada 10. 0 = ninguna (todas por los lados).

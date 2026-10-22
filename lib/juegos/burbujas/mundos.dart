@@ -2,7 +2,9 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
+import 'package:colorear_ninos/juegos/burbujas/animaciones.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbujas_ajustes.dart';
 import 'package:colorear_ninos/juegos/burbujas/dibujos.dart';
 
@@ -123,6 +125,12 @@ void pintarMundo(
   double ahora,
   TextStyle? letra,
 ) {
+  // Si el mundo tiene un fondo animado (y ya se cargó), se ve ese.
+  final fondo = Animaciones.de(AjustesBurbujas.fondosAnimados[mundo.name]);
+  if (fondo != null) {
+    _fondoAnimado(canvas, tam, fondo, ahora);
+    return;
+  }
   switch (mundo) {
     case Mundo.cielo:
       _cielo(canvas, tam, suelo, ahora);
@@ -135,6 +143,24 @@ void pintarMundo(
     case Mundo.espacio:
       _espacio(canvas, tam, suelo, ahora, letra);
   }
+}
+
+/// Un fondo animado (Lottie) que llena toda la pantalla: se agranda lo
+/// necesario y, si sobra, se corta arriba o a los lados (la parte de abajo
+/// se ve siempre).
+void _fondoAnimado(
+    Canvas canvas, Size tam, LottieDrawable fondo, double ahora) {
+  final duracion = math.max(0.1, fondo.composition.seconds);
+  fondo.setProgress((ahora / duracion) % 1);
+  canvas.save();
+  canvas.clipRect(Offset.zero & tam);
+  fondo.draw(
+    canvas,
+    Offset.zero & tam,
+    fit: BoxFit.cover,
+    alignment: Alignment.bottomCenter,
+  );
+  canvas.restore();
 }
 
 // =============================================================================

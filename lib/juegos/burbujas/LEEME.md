@@ -7,7 +7,8 @@ Motricidad fina y puntería: hay que **reventar todas las burbujas** que flotan 
 1. Al entrar, el juego **sigue en el nivel donde quedó** (queda guardado en el celular). Sale el cartel
    **"NIVEL 3"** (un segundo) y la voz dice qué hacer.
 2. Cada nivel pasa en un **mundo distinto**, elegido al azar (nunca el mismo dos veces seguidas): el mundo nuevo
-   aparece en un círculo que se abre desde abajo. Abajo, en el medio, está la **mascota** de ese mundo.
+   aparece en un círculo que se abre desde abajo. Abajo está la **mascota** de ese mundo, un animalito animado
+   que **camina y a veces corre** de un lado a otro (se da vuelta, se queda quieta un ratito y vuelve a pasear).
 3. Las burbujas van saliendo **de a poco**: unas las **sopla la mascota** (salen chiquitas de su boca y crecen) y
    otras entran **por los lados**. Flotan por todas partes, cada una a **su propia velocidad**, cambiando de
    dirección de a poquito y **rebotando** en los bordes y entre ellas.
@@ -26,14 +27,34 @@ Motricidad fina y puntería: hay que **reventar todas las burbujas** que flotan 
 
 | Mundo | Cómo es | Mascota |
 |---|---|---|
-| ☀️ **Cielo** | Sol con carita, nubes que pasan, lomas con flores | 🐥 pollito o 🐶 perrito |
-| 🌊 **Fondo del mar** | Peces que nadan, rayos de luz, algas, arena, cangrejo y burbujitas | 🐳 ballenita |
+| ☀️ **Cielo** | Sol con carita, nubes que pasan, lomas con flores | 🐥 pollito (en su cascarón, va dando saltitos) o 🐶 perrito |
+| 🌊 **Fondo del mar** | Fondo animado: corales, algas, arena y un cardumen de peces que pasa | 🐟 pececito (nada subiendo y bajando) |
 | 🌅 **Atardecer** | Sol grande que se esconde, nubes rosadas, pajaritos y lomas moradas | 🐱 gatito o 🐶 perrito |
 | 🌙 **Noche** | Luna dormida, estrellas que brillan, luciérnagas y casitas | 🐱 gatito |
 | 🚀 **Espacio** | Planetas, estrellas fugaces, un cohete y suelo de luna | 🐶 perrito astronauta (con casco) |
 
-Al empezar cada nivel la voz dice a dónde van: "¡Nivel 4! ¡Al fondo del mar con la ballenita!" (si el nivel trae
+Al empezar cada nivel la voz dice a dónde van: "¡Nivel 4! ¡Al fondo del mar con el pececito!" (si el nivel trae
 una burbuja nueva o un jefe, dice eso en vez del mundo).
+
+## Las mascotas animadas y el fondo del mar
+
+Son animaciones **Lottie** bajadas de lottiefiles.com (como "Lottie JSON"):
+
+| Archivo | Qué es |
+|---|---|
+| `assets/mascotas/perrito.json` | Un corgi caminando |
+| `assets/mascotas/gatito.json` | Un gatito caminando que maúlla (era una película con fondo blanco: se le quitó el fondo) |
+| `assets/mascotas/pollito.json` | Un pollito en su cascarón que mira y pía |
+| `assets/mascotas/pececito.json` | Un pez de rayas nadando con burbujitas |
+| `assets/fondos/mar.json` | El fondo del mar (en vez del dibujado) |
+
+- Los originales están en la carpeta del proyecto de Claude (`arvi_mascotas/originales`). `tools/preparar_mascotas.py`
+  los recorta (para que todos se vean del mismo tamaño) y le quita el fondo blanco al gatito.
+- Cómo camina cada una (si camina con patitas, da saltitos o nada, qué tan rápido, dónde tiene la boca para soplar y
+  la cabeza para el casco) está en `ComoEsLaMascota.deCadaAnimacion`, en `mascota.dart`.
+- Para **agregar otra mascota**: bájala de lottiefiles.com como "Lottie JSON" (de lado, caminando sin avanzar y sin
+  fondo) y mándasela a Claude. Mientras no tenga animación, se ve su emoji (como la 🐳 ballenita).
+- Si un archivo falta o no se puede abrir, se ve el emoji (o el fondo del mar dibujado): el juego no se rompe.
 
 ## Los niveles no se acaban
 
@@ -85,7 +106,8 @@ tiene el botón **"Volver al nivel 1"**.
 | `burbuja.dart` | Cómo se dibuja cada burbuja, las explosiones, los animalitos que salen volando y el dibujo de la tarjeta del menú |
 | `carita.dart` | Las caritas (contenta, riéndose, dormida, "¡ay!") y lo que lleva cada jefe (corona, orejas, gorro, rayas de piñata) |
 | `mundos.dart` | Los cinco mundos (el fondo que se mueve) y cómo cambia de uno a otro |
-| `mascota.dart` | La mascota: cómo respira, sopla, salta, aplaude, y el casco de astronauta |
+| `mascota.dart` | La mascota: cómo camina y corre de un lado a otro, respira, sopla, salta, aplaude, y el casco de astronauta |
+| `animaciones.dart` | Carga una sola vez las animaciones Lottie (mascotas y fondo del mar) |
 | `dibujos.dart` | Letras y emojis ya preparados, para que vaya fluido |
 | `burbujas_papas.dart` | Dónde se guarda el nivel, y la parte de Burbujas en Ajustes ("Volver al nivel 1") |
 
@@ -117,6 +139,13 @@ tiene el botón **"Volver al nivel 1"**.
 | Qué mascota sale en cada mundo | `mascotas` (y su nombre para la voz en `nombresMascotas`) |
 | Cuántas burbujas sopla la mascota | `parteQueSoplaLaMascota` (0 = ninguna, todas por los lados) |
 | Quitar la mascota | `conMascota = false` |
+| La animación de cada mascota | `animacionesMascotas` (bórrala de la lista para que se vea el emoji) |
+| El tamaño de la mascota | `tamanoMascota` (0.22 = el 22% del lado más corto de la pantalla) |
+| Que la mascota no camine | `mascotaCamina = false` (se queda en el medio) |
+| Hasta dónde camina | `zonaDeLaMascota` (0.7 = el 70% del medio de la pantalla) |
+| Cada cuánto corre y qué tan rápido | `parteQueCorre`, `rapidezCorriendo` |
+| Cuánto se queda quieta entre paseos | `segundosQuietaMinimo`, `segundosQuietaMaximo` |
+| Fondo del mar animado o dibujado | `fondosAnimados` (bórralo para volver al dibujado) |
 | Quitar las caritas | `caritas = false` |
 | La palabra al reventar | `palabraAlReventar` (`'¡POP!'`; antes era `'¡AY!'`) |
 | Los sonidos al reventar | `sonidosPop` (las 6 explosiones, van turnándose; borra las que no te gusten) |
@@ -159,5 +188,6 @@ Para cambiar uno, pon otro archivo con el **mismo nombre** en la misma carpeta.
 ## Para que vaya fluido
 
 Todas las burbujas, explosiones, animalitos y la mascota se dibujan juntos en **un solo dibujo** que se repinta en
-cada cuadro (sin rehacer la pantalla); el mundo de atrás es otro dibujo igual. Las letras y los emojis se preparan
+cada cuadro (sin rehacer la pantalla); el mundo de atrás es otro dibujo igual. Las animaciones Lottie se cargan una
+sola vez (en segundo plano) y quedan guardadas mientras la app esté abierta. Las letras y los emojis se preparan
 una sola vez, y los brillos se hacen con degradados en vez de desenfoques (que son lentos en los celulares).

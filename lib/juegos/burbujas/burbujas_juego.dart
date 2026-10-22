@@ -9,6 +9,7 @@ import 'package:colorear_ninos/comun/celebracion.dart';
 import 'package:colorear_ninos/comun/sonidos.dart';
 import 'package:colorear_ninos/comun/titulo_colores.dart';
 import 'package:colorear_ninos/comun/voz.dart';
+import 'package:colorear_ninos/juegos/burbujas/animaciones.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbuja.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbujas_ajustes.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbujas_papas.dart';
@@ -59,6 +60,12 @@ class BurbujasJuego extends StatefulWidget {
 class EstadoBurbujasJuego extends State<BurbujasJuego>
     with TickerProviderStateMixin {
   late final math.Random _azar = math.Random(widget.semilla);
+
+  /// Otro azar para la mascota (por dónde camina), así no cambia el orden
+  /// de las burbujas.
+  late final math.Random _azarMascota = math.Random(
+    widget.semilla == null ? null : widget.semilla! + 1,
+  );
 
   /// Avisa en cada cuadro de la pantalla (unas 60 veces por segundo) para
   /// mover las burbujas.
@@ -150,6 +157,10 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
       AjustesBurbujas.sonidoAplausos,
       AjustesBurbujas.sonidoJefe,
     ]);
+    Animaciones.preparar(<String>[
+      ...AjustesBurbujas.animacionesMascotas.values,
+      ...AjustesBurbujas.fondosAnimados.values,
+    ]);
     _reloj.start();
     _arrancar();
   }
@@ -215,7 +226,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     if (antes != null && antes.emoji == emoji && antes.mundo == _vista.mundo) {
       return; // la misma: se queda
     }
-    _mascota = Mascota(emoji, _vista.mundo)..llega = _ahora;
+    _mascota = Mascota(emoji, _vista.mundo, azar: _azarMascota)..llega = _ahora;
   }
 
   // ------------------------------------------------------- 1. cada nivel
@@ -292,6 +303,8 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     final dt = (t - _ahora).clamp(0.0, 0.05);
     _ahora = t;
     _vista.ahora = t;
+    final tam = _tam;
+    if (tam != null) _mascota?.mover(dt, _ahora, tam);
     _mover(dt);
     _salir();
     _estallidos.removeWhere((e) => e.terminado(_ahora));

@@ -52,7 +52,8 @@ lib/
     │   ├── burbuja.dart ....... cómo se dibuja cada burbuja y su explosión
     │   ├── carita.dart ........ las caritas de las burbujas y lo que lleva cada jefe
     │   ├── mundos.dart ........ los fondos: cielo, mar, atardecer, noche y espacio
-    │   ├── mascota.dart ....... la mascota de abajo (sopla, salta y aplaude)
+    │   ├── mascota.dart ....... la mascota de abajo (camina, corre, sopla, salta y aplaude)
+    │   ├── animaciones.dart ... carga las animaciones Lottie (assets/mascotas y assets/fondos)
     │   ├── dibujos.dart ....... letras y emojis ya preparados (para que vaya fluido)
     │   └── burbujas_papas.dart  guarda el nivel; "Volver al nivel 1" en Ajustes
     └── contar/ ................ 🍎 ¿Cuántos hay? (contar del 1 al 5)

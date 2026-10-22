@@ -1,7 +1,7 @@
 name: colorear_ninos
 description: ARVI - app para colorear sin anuncios y sin internet, pensada para una niña de 3 años.
 publish_to: 'none'
-version: 13.0.0+13
+version: 14.0.0+14
 
 environment:
   sdk: '>=3.6.0 <4.0.0'
@@ -17,6 +17,9 @@ dependencies:
   flutter_tts: ^4.2.0
   # Sonidos al pintar, la fiesta al terminar y las voces grabadas
   audioplayers: ^6.1.0
+  # Las mascotas y el fondo del mar animados de Burbujas (archivos .json de
+  # lottiefiles.com)
+  lottie: ^3.6.1
 
 dev_dependencies:
   flutter_test:
@@ -35,6 +38,9 @@ flutter:
     - assets/sonidos/burbujas/
     - assets/sonidos/contar/
     - assets/voces/
+    # Animaciones de Burbujas (ver lib/juegos/burbujas/LEEME.md).
+    - assets/mascotas/
+    - assets/fondos/
 
 # La versión 2.5 de esta librería (octubre 2026) falla en el APK
 # ("NoSuchMethodError" al abrir Pintar): se usa la anterior.

@@ -41,8 +41,11 @@ void main() {
     }
     expect(camino, greaterThan(velocidadNivel * 1.3 * 0.75));
 
-    // Un toque un poquito al lado también la atrapa.
-    final cerca = dondeEsta(tester, rapida) + Offset(rapida.radio + 8, 0);
+    // Un toque un poquito al lado también la atrapa (del lado que queda
+    // dentro de la pantalla).
+    final donde = dondeEsta(tester, rapida);
+    final hacia = donde.dx > zonaBurbujas(tester).center.dx ? -1.0 : 1.0;
+    final cerca = donde + Offset(hacia * (rapida.radio + 8), 0);
     final otraMasCerca = juego.burbujas.any((b) =>
         b != rapida &&
         (dondeEsta(tester, b) - cerca).distance < b.radio * 1.15 + 18);
