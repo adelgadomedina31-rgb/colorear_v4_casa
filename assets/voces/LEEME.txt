@@ -1,0 +1,71 @@
+VOCES GRABADAS (opcional) - para que la voz suene natural
+=========================================================
+
+La app habla con la voz del celular ("texto a voz"). Si quieres que suene
+como una persona de verdad, puedes GRABAR tu voz (o la de la mamá, los
+abuelos...) y poner los archivos en ESTA carpeta (assets/voces/).
+
+Si un archivo está, se escucha la grabación. Si falta, lo dice la voz del
+celular como siempre. Puedes grabar solo algunas cosas (por ejemplo solo
+"felicidades"), no hace falta grabar todo.
+
+CÓMO GRABAR
+-----------
+1. En el celular abre la "Grabadora de voz" (o WhatsApp: grábate un audio
+   y guárdalo). Graba en un lugar sin ruido, con voz alegre y clara.
+2. Un archivo por cosa. Que empiece a hablar enseguida (sin silencio largo
+   al principio).
+3. Pasa los archivos a la computadora, a esta carpeta, con EXACTAMENTE
+   estos nombres (sin tildes, sin espacios, en minúsculas).
+   Sirven los formatos: .m4a  .mp3  .wav  .ogg  .aac
+4. Sube los cambios a GitHub como siempre (git add . / git commit / git push)
+   y se crea el APK nuevo con tus voces.
+
+NOMBRES DE LOS ARCHIVOS
+-----------------------
+En el menú de juegos (al tocar cada tarjeta):
+   a_pintar.m4a         ->  "¡A pintar!"
+   los_colores.m4a      ->  "¡Los colores!"
+   los_animales.m4a     ->  "¡Los animales!"
+   (Si cambias lo que dice la voz en lib/app/lista_juegos.dart, el nombre
+   del archivo es ese texto sin signos, sin tildes y con _ en vez de
+   espacios.)
+
+PINTAR
+
+Al elegir un color (solo el nombre, alegre: "¡Rojo!"):
+   rojo.m4a  naranja.m4a  amarillo.m4a  verde.m4a  celeste.m4a  azul.m4a
+   morado.m4a  rosado.m4a  marron.m4a  gris.m4a  negro.m4a
+
+Frases:
+   elige_un_color.m4a   ->  "¡Elige un color!"
+        (al entrar a un dibujo, o si toca el dibujo sin haber elegido color)
+   usa_otro_color.m4a   ->  "¡Usa otro color, para que se vea más bonito!"
+        (Modo 1, cuando un mismo color ya pintó la mitad del dibujo)
+   elige_otro_color_para_seguir_pintando.m4a
+                        ->  "¡Elige otro color para seguir pintando!"
+        (Modo 2, cuando termina de pintar el personaje)
+   felicidades.m4a      ->  "¡Felicidades! ¡Lo pintaste muy bien!"
+
+COLORES (el juego de los globos)
+
+   toca_el_globo.m4a    ->  "¡Toca el globo...!" (y después se escucha la
+                            grabación del color: rojo.m4a, azul.m4a...)
+        Solo se usa si están las dos: toca_el_globo y la del color.
+
+Las demás frases de Colores y Animales ("¡Muy bien! ¡Es el rojo!",
+"¿Quién hace guau guau?"...) las dice la voz del celular, porque cambian
+con cada ronda. Los sonidos de verdad de los animales van en otra carpeta:
+assets/sonidos/animales/ (ver su LEEME.txt).
+
+Las frases del Modo 2 de Pintar que nombran al personaje ("¡Pinta el pez con el
+naranja!", "¡Este color es para el pez!", "¡Elige otro color para el pez!")
+las dice siempre la voz del celular, porque cambian con cada dibujo.
+
+(Los ejemplos dicen .m4a, pero puede ser .mp3 u otro de los de arriba.)
+
+Para dejar de usar las grabaciones sin borrarlas: en
+lib/app/ajustes_app.dart pon usarVocesGrabadas = false.
+
+NO borres este archivo LEEME.txt: la carpeta tiene que existir para que la
+app se pueda compilar.

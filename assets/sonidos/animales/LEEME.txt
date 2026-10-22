@@ -1,0 +1,23 @@
+SONIDOS DE VERDAD DE LOS ANIMALES (opcional)
+============================================
+
+Ahora, en el juego Animales, la voz DICE cómo hace cada animal ("guau
+guau"). Si pones aquí el sonido de verdad de un animal, se escucha ese
+sonido en vez de la voz.
+
+El archivo se llama como el nombre corto del animal (el primero de cada
+línea de la lista en lib/juegos/animales/animales_ajustes.dart):
+
+   perro    gato    vaca    cerdito    pollito
+   pato     oveja   gallo   rana       buho
+
+Por ejemplo:  perro.mp3   gato.wav   vaca.m4a
+Sirven:       .mp3  .m4a  .wav  .ogg  .aac
+
+Conviene que cada sonido dure poco (1 a 3 segundos) y empiece enseguida.
+Puedes poner solo algunos: los que no tengan archivo siguen con la voz.
+
+Después: git add . / git commit -m "Sonidos de animales" / git push
+
+NO borres este archivo LEEME.txt: la carpeta tiene que existir para que la
+app se pueda compilar.

@@ -1,0 +1,46 @@
+MIS DIBUJOS
+===========
+
+Pon en esta carpeta las imágenes que quieras que Arleth pinte.
+Cada imagen aparece al PRINCIPIO de los dibujos del juego Pintar.
+
+Qué imágenes sirven:
+  - Láminas para colorear: líneas NEGRAS sobre fondo BLANCO.
+  - Formato PNG o JPG (también .jpeg, .webp, .bmp).
+  - Las figuras deben estar cerradas (sin huecos en las líneas): cada zona
+    blanca encerrada por líneas se vuelve una zona para pintar.
+  - Mejor si son simples y con líneas gruesas (como los dibujos para niños
+    pequeños). Las zonas muy chiquitas no se pintan.
+  - Sin sombras ni grises: una foto de una hoja puede servir si está bien
+    iluminada y derecha, pero un escaneo o una imagen digital funciona mejor.
+
+El nombre del archivo es el nombre del dibujo:
+  "gato feliz.png"  ->  se llama "Gato feliz" en la app.
+
+Los colores del dibujo (opcional, como mucho 5):
+  Pon un archivo de texto con el MISMO nombre que la imagen, por ejemplo
+  "gato feliz.txt" al lado de "gato feliz.png", con los colores separados
+  por comas:
+      Naranja, Rosado, Verde, Celeste, Amarillo
+  Colores que se pueden usar: Rojo, Naranja, Amarillo, Verde, Celeste, Azul,
+  Morado, Rosado, Marron, Gris y Negro.
+  Si no pones el archivo de texto, el dibujo usa: Rojo, Amarillo, Verde,
+  Azul y Rosado. Si pones un solo color, la app le agrega otro (hacen
+  falta al menos 2 para poder cambiar de color).
+
+En el Modo 2 ("Pintado por objeto"):
+  El personaje del dibujo (lo que se pinta entero de un solo color) se busca
+  solo: es lo que NO toca los bordes de la imagen, menos los detalles que
+  quedan adentro de una zona más grande (los ojos, las manchas, una
+  ventana), que se pintan con los otros colores, como el fondo.
+  Funciona mejor con un solo personaje por imagen: si hay varias cosas
+  sueltas (por ejemplo un gato y un sol), cuentan como un solo personaje.
+
+Cómo se agregan:
+  1. Copia las imágenes aquí.
+  2. git add .
+     git commit -m "Nuevos dibujos"
+     git push
+  3. GitHub compila el APK nuevo y convierte las imágenes solo.
+
+Para quitar un dibujo, borra su imagen de esta carpeta y vuelve a subir.
