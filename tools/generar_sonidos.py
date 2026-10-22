@@ -28,6 +28,9 @@
   - soplo.wav: la mascota que sopla una burbuja (suavecito).
   - aplausos.wav: la mascota que aplaude al pasar de nivel.
   - jefe.wav: la fanfarria cuando llega un jefe ("¡ta-ta-ta-taaa!").
+  - explosion1.wav ... explosion6.wav: burbujas que revientan con
+    distintos efectos bonitos (brillitos, campanitas, fuegos artificiales
+    chiquitos, magia, agua y confeti).
 
   contar/
   - nota1.wav ... nota10.wav: una notita que sube al contar cada cosa
@@ -478,6 +481,121 @@ def jefe():
     return suavizar_final(normalizar(pista, 0.8), 150)
 
 
+# ---------------------------------------------------------------------------
+#  Explosiones bonitas (cada una distinta)
+# ---------------------------------------------------------------------------
+
+def _clic(azar, dur, vol, bajo=2500, alto=11000, caida=0.004):
+    t = tiempo(dur)
+    c = filtrar(azar.standard_normal(len(t)), bajo, alto)
+    c *= (1 - np.exp(-t / 0.0003)) * np.exp(-t / caida)
+    return normalizar(c, vol)
+
+
+def _blup(frec, dur=0.22, vol=0.8):
+    t = tiempo(dur)
+    f = frec * (0.55 + 0.9 * (1 - np.exp(-t / 0.03)))
+    fase = 2 * np.pi * np.cumsum(f) / FS
+    env = (1 - np.exp(-t / 0.002)) * np.exp(-t / 0.05)
+    return normalizar((np.sin(fase) + 0.2 * np.sin(2 * fase)) * env, vol)
+
+
+def explosion_brillante(semilla=601):
+    """¡Pop! y tres brillitos que suben."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 0.7))
+    poner(pista, 0, _clic(azar, 0.05, 0.55))
+    poner(pista, 0.003, _blup(nota("A5")))
+    for inicio, n in [(0.05, "C6"), (0.1, "E6"), (0.15, "A6")]:
+        poner(pista, inicio, campanita(nota(n), 0.5, 0.22))
+    for _ in range(5):
+        poner(pista, azar.uniform(0.15, 0.4), campanita(azar.uniform(3000, 5200), 0.2, 0.05))
+    return suavizar_final(normalizar(pista, 0.85), 60)
+
+
+def explosion_campanitas(semilla=602):
+    """Un pop suave y un acorde de campanitas."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 0.8))
+    poner(pista, 0, _clic(azar, 0.04, 0.45))
+    poner(pista, 0.003, _blup(nota("G5"), vol=0.6))
+    for n in ("G5", "B5", "D6"):
+        poner(pista, 0.03, campanita(nota(n), 0.75, 0.25))
+    poner(pista, 0.03, campanita(nota("G4"), 0.6, 0.15))
+    return suavizar_final(normalizar(pista, 0.8), 80)
+
+
+def explosion_fuegos(semilla=603):
+    """Un fuego artificial chiquito: pum, chispitas que crepitan y brillos
+    que caen."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.75
+    pista = np.zeros(int(FS * dur))
+    t = tiempo(0.25)
+    golpe = np.sin(2 * np.pi * 120 * t) * np.exp(-t / 0.04)
+    poner(pista, 0, normalizar(golpe, 0.45))
+    poner(pista, 0, _clic(azar, 0.08, 0.7, 400, 9000, 0.015))
+    # Chispitas: muchos clics finitos.
+    for _ in range(26):
+        poner(pista, azar.uniform(0.06, 0.45),
+              _clic(azar, 0.012, azar.uniform(0.08, 0.25), 3000, 12000, 0.0015))
+    # Brillos que bajan.
+    for inicio, n in [(0.1, "E6"), (0.17, "C6"), (0.24, "A5"), (0.31, "G5")]:
+        poner(pista, inicio, campanita(nota(n), 0.4, 0.14))
+    return suavizar_final(normalizar(pista, 0.85), 80)
+
+
+def explosion_magia(semilla=604):
+    """Pop y una cascada mágica de notas que suben (como un arpa)."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 0.8))
+    poner(pista, 0, _clic(azar, 0.04, 0.5))
+    poner(pista, 0.003, _blup(nota("E5"), vol=0.65))
+    notas = ["C5", "D5", "E5", "G5", "A5", "C6", "D6", "E6", "G6"]
+    for i, n in enumerate(notas):
+        poner(pista, 0.03 + i * 0.028, campanita(nota(n), 0.45, 0.16))
+    return suavizar_final(normalizar(pista, 0.8), 80)
+
+
+def explosion_agua(semilla=605):
+    """¡Plop! de agua: dos blups y gotitas que saltan."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 0.6))
+    poner(pista, 0, _clic(azar, 0.03, 0.4))
+    poner(pista, 0.002, normalizar(burbuja(nota("D5"), 0.2, 1.6, 0.05), 0.8))
+    poner(pista, 0.07, normalizar(burbuja(nota("A5"), 0.15, 1.5, 0.035), 0.5))
+    for _ in range(4):
+        poner(pista, azar.uniform(0.1, 0.3),
+              normalizar(burbuja(azar.uniform(1500, 2600), 0.06, 1.3, 0.014),
+                         azar.uniform(0.15, 0.3)))
+    poner(pista, 0.05, campanita(nota("D6"), 0.4, 0.1))
+    return suavizar_final(normalizar(pista, 0.8), 60)
+
+
+def explosion_confeti(semilla=606):
+    """Pop alegre con confeti: un "pff" de papelitos y dos campanitas."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.7
+    pista = np.zeros(int(FS * dur))
+    poner(pista, 0, _clic(azar, 0.05, 0.6))
+    poner(pista, 0.003, _blup(nota("C6"), vol=0.6))
+    t = tiempo(0.35)
+    papel = filtrar(azar.standard_normal(len(t)), 2000, 9000)
+    papel *= np.minimum(1, t / 0.01) * np.exp(-t / 0.09)
+    papel *= 0.6 + 0.4 * np.abs(np.sin(2 * np.pi * 37 * t))  # que "aletee"
+    poner(pista, 0.02, normalizar(papel, 0.25))
+    poner(pista, 0.06, campanita(nota("G6"), 0.5, 0.2))
+    poner(pista, 0.13, campanita(nota("C7"), 0.5, 0.16))
+    return suavizar_final(normalizar(pista, 0.8), 80)
+
+
+def guardar_explosiones(guardar_en):
+    for i, f in enumerate((explosion_brillante, explosion_campanitas,
+                           explosion_fuegos, explosion_magia, explosion_agua,
+                           explosion_confeti)):
+        guardar_en("burbujas", f"explosion{i + 1}.wav", f())
+
+
 def guardar_burbujas_nuevos(guardar_en):
     """Los sonidos de las burbujas con carita, la mascota y los jefes."""
     for i, f0 in enumerate((430, 480, 530, 590)):
@@ -520,6 +638,7 @@ def main():
     guardar_en("burbujas", "super_toque.wav", super_toque())
     guardar_en("burbujas", "super_pop.wav", super_pop())
     guardar_burbujas_nuevos(guardar_en)
+    guardar_explosiones(guardar_en)
     for i, n in enumerate(["C5", "D5", "E5", "G5", "A5", "C6", "D6", "E6", "G6", "A6"]):
         guardar_en("contar", f"nota{i + 1}.wav", campanita(nota(n), 0.6, 0.8) * np.linspace(1, 0.9, int(FS * 0.6)))
     for grupo in sorted(os.listdir(carpeta)):

@@ -23,10 +23,13 @@ animales/
                        opcionales. Ver animales/LEEME.txt
 
 burbujas/
-   pop1.wav ... pop4.wav ... la burbuja que revienta ("¡blup!")
+   explosion1.wav ... explosion6.wav ... la burbuja que revienta: brillitos,
+                       campanitas, fuegos de color, arpa mágica, gotitas
+                       de agua y confeti (van turnándose)
+   pop1.wav ... pop4.wav ... el "¡blup!" de antes (ya no se usa)
    super_toque.wav ......... cada toque a la súper burbuja, la mega o un jefe
    super_pop.wav ........... la súper, la mega o un jefe que revientan
-   ay1.wav ... ay4.wav ..... la burbuja con carita que revienta ("¡ay!")
+   ay1.wav ... ay4.wav ..... el "¡ay!" de antes (quitado; ver sonidosAy)
    jiji.wav ................ la risita de las burbujas y de la mascota
    soplo.wav ............... la mascota que sopla una burbuja
    aplausos.wav ............ la mascota que aplaude

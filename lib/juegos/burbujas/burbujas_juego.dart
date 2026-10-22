@@ -657,7 +657,8 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         b.tipo == TipoBurbuja.mega ||
         b.tipo == TipoBurbuja.jefe;
 
-    // El sonido: "¡ay!" si tiene carita, si no "¡blup!".
+    // El sonido: una de las explosiones bonitas (o "¡ay!" si tiene carita y
+    // la lista sonidosAy no está vacía).
     final ay = AjustesBurbujas.sonidosAy;
     if (b.conCarita && ay.isNotEmpty) {
       Sonidos.tocar(ay[_turnoAy++ % ay.length]);

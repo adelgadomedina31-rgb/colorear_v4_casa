@@ -212,8 +212,8 @@ class AjustesBurbujas {
   static const bool caritas = true;
 
   /// La palabra que sale al reventar una burbuja con carita (y "¡POP!" si
-  /// no tiene).
-  static const String palabraAlReventar = '¡AY!';
+  /// no tiene). Antes era '¡AY!'.
+  static const String palabraAlReventar = '¡POP!';
 
   // -------------------------------------------------------------- tamaños
   //
@@ -244,8 +244,8 @@ class AjustesBurbujas {
     'Naranja',
   ];
 
-  /// true = al reventar sale la palabra de colores ("¡AY!", o "¡POP!" si
-  /// no tiene carita).
+  /// true = al reventar sale la palabra de colores ([palabraAlReventar]
+  /// si tiene carita, "¡POP!" si no tiene).
   static const bool mostrarPop = true;
 
   // ------------------------------------------------------- entre niveles
@@ -316,13 +316,20 @@ class AjustesBurbujas {
   // Están en assets/sonidos/. Para cambiarlos, pon otro archivo con el
   // mismo nombre (o cambia aquí el nombre).
 
-  /// Al reventar una burbuja SIN carita suena uno de estos (van
-  /// turnándose). Las que tienen carita usan [sonidosAy].
+  /// Al reventar una burbuja suena una de estas explosiones bonitas (van
+  /// turnándose, así cada una suena distinta a la anterior):
+  ///   explosion1 = brillitos       explosion4 = arpa mágica que sube
+  ///   explosion2 = campanitas      explosion5 = gotitas de agua
+  ///   explosion3 = fuegos de color explosion6 = confeti
+  /// Puedes borrar las que no te gusten o volver a poner los pop de antes
+  /// ('burbujas/pop1.wav' ... 'burbujas/pop4.wav').
   static const List<String> sonidosPop = <String>[
-    'burbujas/pop1.wav',
-    'burbujas/pop2.wav',
-    'burbujas/pop3.wav',
-    'burbujas/pop4.wav',
+    'burbujas/explosion1.wav',
+    'burbujas/explosion2.wav',
+    'burbujas/explosion3.wav',
+    'burbujas/explosion4.wav',
+    'burbujas/explosion5.wav',
+    'burbujas/explosion6.wav',
   ];
 
   /// Cada toque a una súper burbuja o a una mega (antes de reventar).
@@ -334,14 +341,11 @@ class AjustesBurbujas {
   /// El animalito que sale volando.
   static const String sonidoAnimalito = 'comunes/acierto.wav';
 
-  /// Las burbujas con carita que revientan diciendo "¡ay!" (van
-  /// turnándose). Si borras todos los nombres, suenan los pop de arriba.
-  static const List<String> sonidosAy = <String>[
-    'burbujas/ay1.wav',
-    'burbujas/ay2.wav',
-    'burbujas/ay3.wav',
-    'burbujas/ay4.wav',
-  ];
+  /// El "¡ay!" de las burbujas con carita: está QUITADO (lista vacía), así
+  /// que también suenan las explosiones de arriba. Para volver a ponerlo,
+  /// escribe dentro de los corchetes 'burbujas/ay1.wav', 'burbujas/ay2.wav',
+  /// 'burbujas/ay3.wav', 'burbujas/ay4.wav'.
+  static const List<String> sonidosAy = <String>[];
 
   /// La risita ("¡jiji!") de las burbujas y de la mascota.
   static const String sonidoRisa = 'burbujas/jiji.wav';

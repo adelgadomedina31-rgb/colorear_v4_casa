@@ -13,8 +13,9 @@ Motricidad fina y puntería: hay que **reventar todas las burbujas** que flotan 
    dirección de a poquito y **rebotando** en los bordes y entre ellas.
 4. Las burbujas tienen **carita**: miran hacia donde van, **parpadean**, y **se ríen** cuando revienta una que está
    al lado o cuando las tocas sin reventarlas (súper, mega y jefes).
-5. **Un toque y revientan** diciendo **"¡ay!"**: la carita pone ojitos "> <", sale un destello, gotitas, papelitos,
-   estrellitas y la palabra **"¡AY!"**. Cada burbuja reventada da una **estrella**.
+5. **Un toque y revientan** con una **explosión bonita** (brillitos, campanitas, fuegos de color, arpa mágica, gotitas
+   o confeti, van turnándose): la carita pone ojitos "> <", sale un destello, gotitas, papelitos, estrellitas y la
+   palabra **"¡POP!"**. Cada burbuja reventada da una **estrella**.
 6. Arriba se ve cuántas lleva y cuántas faltan (una burbujita por cada burbuja del nivel; si son muchas, una barra).
 7. Cuando revienta **todas**: la **mascota aplaude** 👏, un **festejo corto** (fuegos artificiales de burbujas,
    "¡MUY BIEN!") y el nivel siguiente empieza enseguida. **Cada 5 niveles**, la **celebración grande**
@@ -116,15 +117,17 @@ tiene el botón **"Volver al nivel 1"**.
 | Qué mascota sale en cada mundo | `mascotas` (y su nombre para la voz en `nombresMascotas`) |
 | Cuántas burbujas sopla la mascota | `parteQueSoplaLaMascota` (0 = ninguna, todas por los lados) |
 | Quitar la mascota | `conMascota = false` |
-| Quitar las caritas | `caritas = false` (vuelven el "¡POP!" y el "blup") |
-| La palabra al reventar | `palabraAlReventar` (`'¡AY!'`) |
+| Quitar las caritas | `caritas = false` |
+| La palabra al reventar | `palabraAlReventar` (`'¡POP!'`; antes era `'¡AY!'`) |
+| Los sonidos al reventar | `sonidosPop` (las 6 explosiones, van turnándose; borra las que no te gusten) |
+| Volver a poner el "¡ay!" | `sonidosAy` (escribe dentro `'burbujas/ay1.wav'` ... `'burbujas/ay4.wav'`) |
 | El tamaño de cada burbuja | `tamanoMinimo`, `tamanoMaximo`, `tamanoSuper`, `tamanoAnimalito`, `tamanoMega`, `tamanoChica` |
 | Que salgan más seguido o más espaciadas | `segundosEntreBurbujasMinimo`, `segundosEntreBurbujasMaximo` |
 | Cuánto se ve el cartel "NIVEL 3" | `segundosCartelNivel` |
 | Cuánto dura el festejo corto | `segundosFestejoCorto` |
 | Cada cuántos niveles la celebración grande, y cuánto dura | `celebracionGrandeCada`, `segundosCelebracionGrande` |
 | Los colores de las burbujas | `colores` (con los nombres de la lista de colores de `lib/app/ajustes_app.dart`) |
-| Quitar la palabra "¡AY!" / "¡POP!" | `mostrarPop = false` |
+| Quitar la palabra "¡POP!" | `mostrarPop = false` |
 | Lo que dice la voz | `vozInicio`, `vozNivel` (`{nivel}` = el número), `vozSuper`, `vozAnimalito`, `vozMega`, `vozRapida`, `vozJefes`, `vozMundos` (`{mascota}` = el nombre de la mascota), `vozMuyBien` |
 | Los textos de los festejos | `festejoCorto`, `celebracionLinea1`, `celebracionLinea2`, `vozCelebracion` |
 
@@ -136,8 +139,11 @@ Cosas que están en otro archivo:
 
 ## Sonidos
 
-- `assets/sonidos/burbujas/ay1.wav` ... `ay4.wav`: la burbuja con carita que revienta ("¡ay!", van turnándose).
-- `assets/sonidos/burbujas/pop1.wav` ... `pop4.wav`: la burbuja sin carita que revienta (si `caritas = false`).
+- `assets/sonidos/burbujas/explosion1.wav` ... `explosion6.wav`: la burbuja que revienta (van turnándose):
+  1 brillitos, 2 campanitas, 3 fuegos de color, 4 arpa mágica que sube, 5 gotitas de agua, 6 confeti.
+- `assets/sonidos/burbujas/ay1.wav` ... `ay4.wav`: el "¡ay!" de antes. Está quitado (`sonidosAy` vacía); se
+  pueden volver a poner.
+- `assets/sonidos/burbujas/pop1.wav` ... `pop4.wav`: el "¡blup!" de antes (ya no se usa).
 - `assets/sonidos/burbujas/jiji.wav`: la risita (las burbujas que tocas sin reventar, y la mascota).
 - `assets/sonidos/burbujas/super_toque.wav`: cada toque a la súper burbuja, la mega o un jefe.
 - `assets/sonidos/burbujas/super_pop.wav`: la súper, la mega o un jefe que revientan.
