@@ -24,7 +24,6 @@ void main() {
       final n = cosasParaContar(tester);
       if (n > mayor) mayor = n;
       expect(n, lessThanOrEqualTo(AjustesContar.hastaMaximo));
-      expect(botonesContar(tester), contains(n));
       await acertarContar(tester);
       // Se salta la celebración.
       if (celebracion.evaluate().isNotEmpty) {

@@ -19,8 +19,11 @@ import 'package:colorear_ninos/juegos/contar/contar_ajustes.dart';
 ///  2. Al tocar cada una, salta, suena una notita que va subiendo, la voz
 ///     dice el número ("uno", "dos"...) y le queda puesto su número.
 ///     Arriba se ve el número grande.
-///  3. Cuando contó todas, la voz pregunta "¿Cuántas manzanas hay?" y abajo
-///     salen botones con números (con puntitos para ayudarla).
+///  3. Cuando contó todas, la voz dice el número ("¡Sí! ¡Hay tres
+///     manzanas!"), gana una estrella y viene otra ronda.
+///     Con AjustesContar.preguntarCuantosHay = true, en cambio, la voz
+///     pregunta "¿Cuántas manzanas hay?" y abajo salen botones con números
+///     (con puntitos para ayudarla).
 ///  4. Si acierta: estrellitas, una estrella y la voz la felicita.
 ///     Si toca otro: el botón se mueve, la voz dice "Ese es el dos.
 ///     ¡Contemos otra vez!" y la voz cuenta con ella cada cosa. Después de
@@ -30,11 +33,15 @@ import 'package:colorear_ninos/juegos/contar/contar_ajustes.dart';
 /// La orejita de arriba repite lo que hay que hacer.
 /// Lo que se puede cambiar está en contar_ajustes.dart.
 class ContarJuego extends StatefulWidget {
-  const ContarJuego({super.key, this.semilla});
+  const ContarJuego({super.key, this.semilla, this.preguntar});
 
   /// Para las pruebas: con el mismo número las rondas salen siempre
   /// iguales. Sin número, cada vez es distinto.
   final int? semilla;
+
+  /// Para las pruebas: si pregunta cuántos hay al terminar de contar. Sin
+  /// valor, lo que diga AjustesContar.preguntarCuantosHay.
+  final bool? preguntar;
 
   @override
   State<ContarJuego> createState() => _EstadoContarJuego();
@@ -46,6 +53,9 @@ enum _Fase { contando, preguntando, acerto }
 class _EstadoContarJuego extends State<ContarJuego>
     with TickerProviderStateMixin {
   late final math.Random _azar = math.Random(widget.semilla);
+
+  /// Si al terminar de contar pregunta cuántos hay (con botones).
+  bool get _pregunta => widget.preguntar ?? AjustesContar.preguntarCuantosHay;
 
   final Dificultad _dificultad = Dificultad(
     minimo: AjustesContar.hastaAlEmpezar.clamp(1, 10),
@@ -232,7 +242,12 @@ class _EstadoContarJuego extends State<ContarJuego>
     if (_contadas == _cantidad) {
       final ronda = _ronda;
       Future<void>.delayed(const Duration(milliseconds: 900), () {
-        if (mounted && ronda == _ronda && !_contandoJuntas) _preguntar();
+        if (!mounted || ronda != _ronda || _contandoJuntas) return;
+        if (_pregunta) {
+          _preguntar();
+        } else {
+          _acerto();
+        }
       });
     }
   }
@@ -383,7 +398,7 @@ class _EstadoContarJuego extends State<ContarJuego>
                     ),
                   ),
                 ),
-                SizedBox(height: 150, child: _botones()),
+                if (_pregunta) SizedBox(height: 150, child: _botones()),
                 const SizedBox(height: 16),
               ],
             ),

@@ -4,9 +4,13 @@
 //
 //  Cada ronda aparecen unas cosas (manzanas, pollitos, estrellas...). Ella
 //  las toca una por una y la voz cuenta: "uno, dos, tres". Cuando contó
-//  todas, la voz pregunta "¿Cuántas manzanas hay?" y abajo salen botones
-//  con números (y puntitos). Si acierta, gana una estrella. Si se equivoca,
-//  la voz dice qué número tocó y cuentan juntas otra vez.
+//  todas, la voz dice "¡Sí! ¡Hay tres manzanas!", gana una estrella y viene
+//  otra ronda.
+//
+//  Si pones preguntarCuantosHay = true, cuando contó todas la voz pregunta
+//  "¿Cuántas manzanas hay?" y abajo salen botones con números (y puntitos).
+//  Si acierta, gana una estrella. Si se equivoca, la voz dice qué número
+//  tocó y cuentan juntas otra vez.
 //
 //  Empieza con hasta 3 cosas y, a medida que acierta, llega hasta 5.
 //
@@ -58,6 +62,14 @@ class AjustesContar {
     Cosa(dibujo: '🐢', una: 'tortuga', varias: 'tortugas', femenino: true),
   ];
 
+  // -------------------------------------------------------- la pregunta
+
+  /// false = cuando contó todas, la voz dice el número ("¡Sí! ¡Hay tres
+  /// manzanas!") y termina la ronda, sin preguntar ni botones.
+  /// true = la voz pregunta "¿Cuántas manzanas hay?" y tiene que tocar el
+  /// botón con el número correcto.
+  static const bool preguntarCuantosHay = false;
+
   // ------------------------------------------------------------ dificultad
 
   /// Hasta cuántas cosas puede haber al empezar, y lo más que llega a
@@ -73,7 +85,8 @@ class AjustesContar {
   /// cosa menos (nunca menos de hastaAlEmpezar).
   static const int erroresParaBajar = 2;
 
-  /// Cuántos botones con números salen para responder.
+  /// Cuántos botones con números salen para responder (solo con
+  /// preguntarCuantosHay = true).
   static const int botones = 3;
 
   /// Después de equivocarse esta cantidad de veces en una ronda, el botón
@@ -104,10 +117,12 @@ class AjustesContar {
   /// Al empezar cada ronda (y con la orejita, mientras cuenta).
   static const String vozCuenta = '¡Cuenta {las} {cosas}! Toca cada {una}.';
 
-  /// Cuando ya contó todas (y con la orejita, mientras responde).
+  /// Cuando ya contó todas (y con la orejita, mientras responde). Solo con
+  /// preguntarCuantosHay = true.
   static const String vozPregunta = '¿{Cuantas} {cosas} hay?';
 
-  /// Cuando acierta (una de estas, al azar).
+  /// Cuando contó todas (o, si pregunta, cuando acierta). Una de estas, al
+  /// azar.
   static const List<String> vozAcierto = <String>[
     '¡Sí! ¡Hay {numero} {cosas}!',
     '¡Muy bien! ¡Contaste {numero} {cosas}!',

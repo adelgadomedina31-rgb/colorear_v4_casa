@@ -237,11 +237,12 @@ Future<void> responder(WidgetTester tester, int n) async {
   await tester.pump(const Duration(milliseconds: 100));
 }
 
-/// Cuenta y responde bien; espera a que empiece la ronda siguiente.
+/// Cuenta y, si pregunta, responde bien; espera a que empiece la ronda
+/// siguiente.
 Future<void> acertarContar(WidgetTester tester) async {
   final n = cosasParaContar(tester);
   await contarTodas(tester);
-  await responder(tester, n);
+  if (botonesContar(tester).isNotEmpty) await responder(tester, n);
   await tester.pump(const Duration(milliseconds: 4000));
   await esperar(tester, vueltas: 4);
 }

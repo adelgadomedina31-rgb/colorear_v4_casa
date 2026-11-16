@@ -34,12 +34,13 @@ void main() {
   setUp(prepararPrueba);
 
   testWidgets(
-      '¿Cuántos hay?: toca cada cosa y la voz cuenta, después elige el '
-      'número; si se equivoca cuentan otra vez; si acierta gana una estrella',
-      (tester) async {
+      '¿Cuántos hay? (con la pregunta): toca cada cosa y la voz cuenta, '
+      'después elige el número; si se equivoca cuentan otra vez; si acierta '
+      'gana una estrella', (tester) async {
     sinAvisosDeSonido();
     await tester.binding.setSurfaceSize(const Size(420, 860));
-    await tester.pumpWidget(const MaterialApp(home: ContarJuego(semilla: 5)));
+    await tester.pumpWidget(
+        const MaterialApp(home: ContarJuego(semilla: 5, preguntar: true)));
     await esperar(tester);
 
     // Hay entre 1 y 3 cosas, y la voz dice qué contar.

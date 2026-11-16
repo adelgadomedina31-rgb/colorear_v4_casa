@@ -9,9 +9,12 @@ Aprende a **contar** (del 1 al 5) tocando cada cosa mientras la voz cuenta.
 2. **Al tocar cada una:** salta, suena una notita que va **subiendo** (do, re, mi...), la voz dice el número
    ("uno", "dos", "tres"), le queda puesto su número en un circulito de color y arriba se ve el número grande.
    Tocar otra vez una que ya contó no hace nada.
-3. Cuando contó todas, la voz pregunta **"¿Cuántas manzanas hay?"** y abajo salen **3 botones** con números. Cada
-   botón tiene también **puntitos** (el 3 tiene tres puntitos), para que pueda responder aunque todavía no conozca
-   los números.
+3. Cuando contó todas, la voz dice cuántas hay (**"¡Sí! ¡Hay tres manzanas!"**), gana una **estrella** y viene otra
+   ronda con otra cosa. Así viene (`preguntarCuantosHay = false`).
+
+   Con `preguntarCuantosHay = true`, en cambio, la voz pregunta **"¿Cuántas manzanas hay?"** y abajo salen
+   **3 botones** con números. Cada botón tiene también **puntitos** (el 3 tiene tres puntitos), para que pueda
+   responder aunque todavía no conozca los números. Los pasos 4 y 5 son solo para este caso.
 4. **Si acierta:** el botón se pinta, salen estrellitas, gana una **estrella** y la voz la felicita ("¡Sí! ¡Hay tres
    manzanas!"). Después viene otra ronda con otra cosa.
 5. **Si toca otro número:** el botón se mueve, suena un "boing" suave y la voz dice **"Ese es el dos. ¡Contemos otra
@@ -35,6 +38,7 @@ Arriba: la **casita** vuelve al menú, en el medio están las **estrellas** gana
 
 | Quiero… | Cambia |
 |---|---|
+| Que pregunte "¿Cuántas hay?" con botones al terminar de contar (o que no pregunte) | `preguntarCuantosHay` (`true` = pregunta, `false` = solo dice el número) |
 | Agregar o quitar cosas para contar | `cosas` (cada una con su emoji, cómo se dice una y varias, y si es femenino: "las manzanas") |
 | Hasta cuántas cosas al empezar y como máximo | `hastaAlEmpezar`, `hastaMaximo` (máximo 10) |
 | Que suba de dificultad más rápido o más lento | `aciertosParaSubir` |
