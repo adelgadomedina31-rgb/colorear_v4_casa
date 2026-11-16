@@ -1,4 +1,4 @@
-git -C ARVI_github status// =============================================================================
+// =============================================================================
 //  AJUSTES DEL JUEGO "BURBUJAS" (Revienta las burbujas)
 // =============================================================================
 //
@@ -30,15 +30,15 @@ class AjustesBurbujas {
 
   /// Cuántas burbujas normales hay en el nivel 1, cuántas se suman en cada
   /// nivel, y el máximo.
-  static const int burbujasAlEmpezar = 6;
+  static const int burbujasAlEmpezar = 8;
   static const int burbujasMasPorNivel = 1;
-  static const int burbujasMaximo = 12;
+  static const int burbujasMaximo = 15;
 
   /// Cuántas puede haber en la pantalla al mismo tiempo: en el nivel 1, y
   /// lo más que llega a haber. Se suma una cada [nivelesParaUnaMasALaVez]
   /// niveles.
-  static const int aLaVezAlEmpezar = 3;
-  static const int aLaVezMaximo = 7;
+  static const int aLaVezAlEmpezar = 8;
+  static const int aLaVezMaximo = 12;
   static const int nivelesParaUnaMasALaVez = 3;
 
   /// Qué tan rápido van: cuánto del ancho de la pantalla (con el teléfono
@@ -57,7 +57,7 @@ class AjustesBurbujas {
   /// Nunca más de esta cantidad de burbujas para reventar en un nivel
   /// (contando todas: el jefe, las burbujitas que suelta y las que salen
   /// de las mega burbujas).
-  static const int totalMaximo = 32;
+  static const int totalMaximo = 45;
 
   // ---------------------------------------------- niveles más tranquilos
 
@@ -98,16 +98,16 @@ class AjustesBurbujas {
 
   /// MEGA BURBUJA: enorme, con burbujitas adentro. Con [toquesMega] toques
   /// explota y salen [hijasMega] burbujitas que también hay que reventar.
-  static const int megaDesdeNivel = 7;
+  static const int megaDesdeNivel = 1;
   static const int megaMaximo = 2;
-  static const int toquesMega = 2;
-  static const int hijasMega = 4;
+  static const int toquesMega = 5;
+  static const int hijasMega = 6;
 
   /// BURBUJITAS RÁPIDAS: chiquitas, brillantes y muy rápidas (dejan una
   /// estela). [velocidadRapidas] = cuántas veces más rápido que las demás.
-  static const int rapidaDesdeNivel = 9;
+  static const int rapidaDesdeNivel = 1;
   static const int rapidaMaximo = 6;
-  static const double velocidadRapidas = 2.2;
+  static const double velocidadRapidas = 3.2;
 
   // ------------------------------------------------- los jefes
   //
@@ -161,20 +161,20 @@ class AjustesBurbujas {
 
   /// Cuántos toques necesita el jefe: al empezar, uno más cada
   /// [nivelesParaUnToqueMas] niveles, y el máximo.
-  static const int toquesJefeAlEmpezar = 5;
-  static const int nivelesParaUnToqueMas = 4;
-  static const int toquesJefeMaximo = 9;
+  static const int toquesJefeAlEmpezar = 10;
+  static const int nivelesParaUnToqueMas = 1;
+  static const int toquesJefeMaximo = 15;
 
   /// Cuántas burbujitas suelta el jefe con cada toque, y cuántas al
   /// reventar.
   static const int burbujitasPorToqueJefe = 1;
-  static const int burbujitasAlReventarJefe = 6;
+  static const int burbujitasAlReventarJefe = 8;
 
   /// El tamaño del jefe al llegar (parte del ancho de la pantalla: 0.75 =
   /// tres cuartos), y qué tan chiquito queda al final (0.4 = casi la
   /// mitad).
   static const double tamanoJefe = 0.75;
-  static const double jefeAchicaHasta = 0.4;
+  static const double jefeAchicaHasta = 0.65;
 
   /// Qué tan rápido va el jefe (comparado con las burbujas normales: 0.5 =
   /// a la mitad). Cada jefe se mueve a su manera.
