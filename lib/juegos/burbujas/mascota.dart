@@ -113,7 +113,7 @@ class ComoEsLaMascota {
 }
 
 /// La mascota de cada nivel: está abajo, camina y corre de un lado a otro,
-/// sopla burbujas, se ríe si la tocan y aplaude al pasar de nivel.
+/// sopla burbujas, salta y habla si la tocan y aplaude al pasar de nivel.
 class Mascota {
   Mascota(this.emoji, this.mundo, {math.Random? azar})
       : ruta = AjustesBurbujas.animacionesMascotas[emoji],

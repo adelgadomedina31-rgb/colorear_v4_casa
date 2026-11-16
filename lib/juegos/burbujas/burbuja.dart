@@ -87,6 +87,30 @@ class Burbuja {
   /// Cuánto dura un salto de la saltarina (segundos).
   static const double duracionSalto = 0.45;
 
+  /// La saltarina: cuándo da el próximo saltito (sola, sin que la toquen).
+  double proximoSaltito = 0;
+
+  /// El fantasma: cuándo empezó a esconderse y dónde vuelve a aparecer.
+  double escondeInicio = -10;
+  Offset escondeHasta = Offset.zero;
+
+  /// Cuánto tarda el fantasma en esconderse y aparecer en otro lado.
+  static const double duracionEscondida = 0.7;
+
+  /// Los jefes que salen corriendo cuando los tocas: hasta cuándo.
+  double apuradoHasta = -10;
+
+  /// La pelota: su velocidad hacia los lados y hacia abajo (píxeles por
+  /// segundo).
+  double vx = 0;
+  double vy = 0;
+
+  /// Cuánto giró su dibujo (la pelota que rueda, el remolino que gira).
+  double vuelta = 0;
+
+  /// true = el jefe ya llegó (e hizo temblar la pantalla).
+  bool llego = false;
+
   /// Cuánto dura la risa (segundos).
   static const double duracionRisa = 0.9;
 
@@ -119,11 +143,39 @@ class Burbuja {
       switch (jefe) {
         TipoJefe.rey => 1.4,
         TipoJefe.saltarina => 1.85,
-        TipoJefe.dormilona || TipoJefe.pinata => 1.3,
+        TipoJefe.dormilona || TipoJefe.pinata || TipoJefe.dragon => 1.3,
+        TipoJefe.remolino => 1.15,
+        TipoJefe.fantasma || TipoJefe.pulpo || TipoJefe.pelota => 1.0,
         null => 1.0,
       };
 
+  /// Cuánto se asoma por abajo (la sábana del fantasma, los tentáculos del
+  /// pulpo).
+  double get margenAbajo =>
+      radio *
+      switch (jefe) {
+        TipoJefe.fantasma => 1.25,
+        TipoJefe.pulpo => 1.4,
+        TipoJefe.remolino => 1.15,
+        _ => 1.0,
+      };
+
   bool despierta(double ahora) => ahora < despiertaHasta;
+
+  bool escondiendo(double ahora) => ahora - escondeInicio < duracionEscondida;
+
+  bool apurado(double ahora) => ahora < apuradoHasta;
+
+  /// Qué tanto se ve (de 0 a 1): el fantasma es medio transparente, y
+  /// mientras se esconde desaparece y vuelve a aparecer.
+  double opacidad(double ahora) {
+    if (jefe != TipoJefe.fantasma) return 1;
+    final base = 0.82 + 0.12 * math.sin(ahora * 3 + fase);
+    if (!escondiendo(ahora)) return base;
+    final f = (ahora - escondeInicio) / duracionEscondida;
+    final visible = f < 0.5 ? 1 - f / 0.5 : (f - 0.5) / 0.5;
+    return base * visible.clamp(0.0, 1.0);
+  }
 
   bool saltando(double ahora) => ahora - saltoInicio < duracionSalto;
 
@@ -132,7 +184,9 @@ class Burbuja {
   /// La cara que tiene ahora.
   Gesto gesto(double ahora) {
     if (jefe == TipoJefe.dormilona && !despierta(ahora)) return Gesto.dormida;
-    if (riendo(ahora) || saltando(ahora)) return Gesto.risa;
+    if (riendo(ahora) || saltando(ahora) || escondiendo(ahora)) {
+      return Gesto.risa;
+    }
     return Gesto.normal;
   }
 }
@@ -194,6 +248,25 @@ class AnimalLibre {
   bool terminado(double ahora) => ahora - inicio >= duracion;
 }
 
+/// Las chispitas de colores que estornuda el dragón.
+class Llamarada {
+  Llamarada(this.centro, this.direccion, this.radio, this.inicio);
+
+  /// De dónde sale (la boca del dragón).
+  final Offset centro;
+
+  /// Hacia dónde va (largo 1).
+  final Offset direccion;
+
+  /// Qué tan lejos llega.
+  final double radio;
+  final double inicio;
+
+  static const double duracion = 0.8;
+
+  bool terminado(double ahora) => ahora - inicio >= duracion;
+}
+
 // =============================================================================
 //  Cómo se dibuja una burbuja
 // =============================================================================
@@ -222,6 +295,17 @@ void pintarBurbuja(Canvas canvas, Burbuja b, double ahora, {TextStyle? letra}) {
       : Curves.easeOutBack.transform((edad / 0.3).clamp(0.0, 1.0));
   if (crece <= 0.01) return;
 
+  // El fantasma se ve medio transparente (y desaparece al esconderse).
+  final opacidad = b.opacidad(ahora);
+  if (opacidad <= 0.02) return;
+  final enCapa = opacidad < 0.99;
+  if (enCapa) {
+    canvas.saveLayer(
+      Rect.fromCircle(center: b.centro, radius: r * 2.2),
+      Paint()..color = Colors.white.withValues(alpha: opacidad),
+    );
+  }
+
   // Tiembla suavecito (y mucho más cuando la tocan sin reventarla).
   final temblor = math.sin(ahora * 5 + b.fase) * 0.035;
   final boing = b.golpe * math.sin(b.golpe * math.pi * 4) * 0.22;
@@ -245,20 +329,32 @@ void pintarBurbuja(Canvas canvas, Burbuja b, double ahora, {TextStyle? letra}) {
   canvas.scale(ex, ey);
 
   final jefe = b.jefe;
+  // La piñata se hamaca colgada de su cuerda (más fuerte cuando la tocan).
+  if (jefe == TipoJefe.pinata) {
+    final hamaca =
+        math.sin(ahora * 2.2 + b.fase) * (b.apurado(ahora) ? 0.2 : 0.08);
+    canvas.translate(0, -r * 1.7);
+    canvas.rotate(hamaca);
+    canvas.translate(0, r * 1.7);
+  }
   switch (b.tipo) {
     case TipoBurbuja.superBurbuja:
       _resplandor(canvas, r, const Color(0xFFFFD54F), ahora, b.fase);
     case TipoBurbuja.jefe:
+      // Los jefes brillan con rayos de luz que giran: ¡son imponentes!
+      pintarRayosJefe(canvas, r, color, ahora);
       _resplandor(canvas, r, color, ahora, b.fase);
     case TipoBurbuja.rapida:
       _resplandor(canvas, r, Colors.white, ahora, b.fase);
     default:
       break;
   }
-  if (jefe != null) pintarJefeAtras(canvas, jefe, r, ahora);
+  if (jefe != null) {
+    pintarJefeAtras(canvas, jefe, r, ahora, fase: b.fase, color: color);
+  }
 
   _cuerpo(canvas, b, r, color, ahora);
-  if (jefe == TipoJefe.pinata) pintarRayasPinata(canvas, r, ahora);
+  if (jefe != null) pintarJefeAdentro(canvas, jefe, r, ahora, vuelta: b.vuelta);
 
   if (b.conCarita) {
     pintarCarita(
@@ -284,6 +380,7 @@ void pintarBurbuja(Canvas canvas, Burbuja b, double ahora, {TextStyle? letra}) {
           r,
           ahora,
           despierta: b.despierta(ahora),
+          vuelta: b.vuelta,
           letra: letra,
         );
       }
@@ -339,6 +436,7 @@ void pintarBurbuja(Canvas canvas, Burbuja b, double ahora, {TextStyle? letra}) {
       break;
   }
   canvas.restore();
+  if (enCapa) canvas.restore();
 }
 
 /// Para que los colores de un degradado circular vayan girando.
@@ -677,6 +775,50 @@ void pintarEstallidos(
           c + Offset(0, -r * 0.35 * sale),
           alto,
           opacidad,
+        );
+      }
+    }
+  }
+}
+
+const List<Color> _fuego = <Color>[
+  Color(0xFFFFEB3B),
+  Color(0xFFFFA726),
+  Color(0xFFFF7043),
+  Color(0xFFFF4081),
+  Color(0xFFFFF59D),
+];
+
+/// Dibuja las chispitas que estornuda el dragón: bolitas de colores y
+/// estrellitas que salen de su boca, se abren y se apagan.
+void pintarLlamaradas(
+  Canvas canvas,
+  List<Llamarada> llamaradas,
+  double ahora,
+) {
+  for (final l in llamaradas) {
+    final t = ((ahora - l.inicio) / Llamarada.duracion).clamp(0.0, 1.0);
+    if (t >= 1) continue;
+    final sale = Curves.easeOut.transform(t);
+    final lado = Offset(-l.direccion.dy, l.direccion.dx);
+    for (var i = 0; i < 14; i++) {
+      final abre = ((i * 0.618) % 1 - 0.5) * 1.3;
+      final lejos = l.radio * (0.15 + (0.7 + (i % 4) * 0.2) * sale);
+      final p = l.centro + l.direccion * lejos + lado * (abre * lejos * 0.7);
+      final tam = l.radio *
+          (0.06 + 0.09 * sale) *
+          (1 - t * 0.5) *
+          (0.7 + (i % 3) * 0.2);
+      if (i % 4 == 0) {
+        canvas.drawPath(
+          estrella(p, tam * 1.4, tam * 0.6),
+          Paint()..color = Colors.white.withValues(alpha: 1 - t),
+        );
+      } else {
+        canvas.drawCircle(
+          p,
+          tam,
+          Paint()..color = _fuego[i % _fuego.length].withValues(alpha: 1 - t),
         );
       }
     }

@@ -182,7 +182,57 @@ Color colorDeJefe(TipoJefe jefe) => switch (jefe) {
       TipoJefe.saltarina => const Color(0xFFEC407A),
       TipoJefe.dormilona => const Color(0xFF7986CB),
       TipoJefe.pinata => const Color(0xFFFF7043),
+      TipoJefe.fantasma => const Color(0xFFB39DDB),
+      TipoJefe.pulpo => const Color(0xFFBA68C8),
+      TipoJefe.dragon => const Color(0xFF66BB6A),
+      TipoJefe.pelota => const Color(0xFFFF5252),
+      TipoJefe.remolino => const Color(0xFF26C6DA),
     };
+
+/// Los colores de la pelota de playa (y de las burbujitas que suelta).
+const List<Color> coloresPelota = <Color>[
+  Color(0xFFF44336),
+  Color(0xFFFFEB3B),
+  Color(0xFF2196F3),
+  Color(0xFFFFFFFF),
+  Color(0xFF4CAF50),
+  Color(0xFFFF9800),
+];
+
+/// Qué tan fuerte está nadando el pulpo en el momento [ahora] (de 0 a 1):
+/// nada a empujoncitos.
+double pulsoPulpo(double ahora, double fase) =>
+    math.pow(math.max(0.0, math.sin(ahora * 2.4 + fase)), 3).toDouble();
+
+/// Los rayos de luz que giran detrás de un jefe.
+void pintarRayosJefe(Canvas canvas, double r, Color color, double ahora) {
+  const n = 12;
+  final giro = ahora * 0.35;
+  final largo = r * (1.55 + 0.06 * math.sin(ahora * 3));
+  final rayos = Path();
+  for (var i = 0; i < n; i++) {
+    final a = giro + i * 2 * math.pi / n;
+    rayos
+      ..moveTo(0, 0)
+      ..lineTo(math.cos(a - 0.12) * largo, math.sin(a - 0.12) * largo)
+      ..lineTo(math.cos(a + 0.12) * largo, math.sin(a + 0.12) * largo)
+      ..close();
+  }
+  canvas.drawPath(
+    rayos,
+    Paint()
+      ..shader = ui.Gradient.radial(
+        Offset.zero,
+        largo,
+        <Color>[
+          color.withValues(alpha: 0.0),
+          color.withValues(alpha: 0.32),
+          color.withValues(alpha: 0.0),
+        ],
+        <double>[0.5, 0.62, 1.0],
+      ),
+  );
+}
 
 /// Los colores de los dulces (la piñata y sus burbujitas).
 const List<Color> coloresDulces = <Color>[
@@ -195,8 +245,16 @@ const List<Color> coloresDulces = <Color>[
 ];
 
 /// Lo que va DETRÁS de la burbuja del jefe (orejas, la cuerda de la
-/// piñata). El lienzo ya está en el centro de la burbuja.
-void pintarJefeAtras(Canvas canvas, TipoJefe jefe, double r, double ahora) {
+/// piñata, la sábana del fantasma, los tentáculos, las alas). El lienzo ya
+/// está en el centro de la burbuja.
+void pintarJefeAtras(
+  Canvas canvas,
+  TipoJefe jefe,
+  double r,
+  double ahora, {
+  double fase = 0,
+  Color color = const Color(0xFFBA68C8),
+}) {
   switch (jefe) {
     case TipoJefe.saltarina:
       // Orejas de conejo que se mueven.
@@ -239,8 +297,302 @@ void pintarJefeAtras(Canvas canvas, TipoJefe jefe, double r, double ahora) {
           ..strokeCap = StrokeCap.round
           ..color = const Color(0xFF8D6E63),
       );
+    case TipoJefe.fantasma:
+      _sabana(canvas, r, ahora);
+    case TipoJefe.pulpo:
+      _tentaculos(canvas, r, ahora, fase, color);
+    case TipoJefe.dragon:
+      _alasYCola(canvas, r, ahora);
     default:
       break;
+  }
+}
+
+/// Lo que va ADENTRO de la burbuja del jefe, encima del cuerpo
+/// transparente y debajo de la carita (las franjas de la piñata, los gajos
+/// de la pelota, la espiral del remolino).
+void pintarJefeAdentro(
+  Canvas canvas,
+  TipoJefe jefe,
+  double r,
+  double ahora, {
+  double vuelta = 0,
+}) {
+  switch (jefe) {
+    case TipoJefe.pinata:
+      pintarRayasPinata(canvas, r, ahora);
+    case TipoJefe.pelota:
+      _gajosPelota(canvas, r, vuelta);
+    case TipoJefe.remolino:
+      _espiral(canvas, r, vuelta);
+    default:
+      break;
+  }
+}
+
+/// La sábana del fantasma: baja desde los costados y termina en ondas que
+/// se mueven.
+void _sabana(Canvas canvas, double r, double ahora) {
+  // Envuelve la mitad de abajo de la burbuja (se ve un bordecito blanco a
+  // los lados) y se abre un poquito hacia abajo, como una sábana.
+  final fondo = r * 0.95;
+  final camino = Path()
+    ..moveTo(-r * 1.05, -r * 0.15)
+    ..quadraticBezierTo(-r * 1.1, r * 0.4, -r * 1.12, fondo);
+  const ondas = 4;
+  final paso = 2 * r * 1.12 / ondas;
+  for (var k = 0; k < ondas; k++) {
+    final x = -r * 1.12 + k * paso;
+    final hondo = r * (0.3 + 0.08 * math.sin(ahora * 5 + k * 1.7));
+    camino.quadraticBezierTo(x + paso / 2, fondo + hondo, x + paso, fondo);
+  }
+  camino
+    ..quadraticBezierTo(r * 1.1, r * 0.4, r * 1.05, -r * 0.15)
+    ..close();
+  final sabana = Path.combine(
+    PathOperation.difference,
+    camino,
+    Path()..addOval(Rect.fromCircle(center: Offset.zero, radius: r * 0.97)),
+  );
+  canvas.drawPath(sabana, Paint()..color = Colors.white.withValues(alpha: 0.9));
+  canvas.drawPath(
+    sabana,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = r * 0.03
+      ..strokeJoin = StrokeJoin.round
+      ..color = const Color(0xFF9575CD),
+  );
+}
+
+/// Los seis tentáculos del pulpo: se mueven como olas y se encogen cuando
+/// da un empujoncito para nadar.
+void _tentaculos(
+  Canvas canvas,
+  double r,
+  double ahora,
+  double fase,
+  Color color,
+) {
+  final pulso = pulsoPulpo(ahora, fase);
+  final largo = r * (0.8 - 0.3 * pulso);
+  const pasos = 9;
+  final piel = Paint()..color = Color.lerp(color, Colors.black, 0.12)!;
+  final ventosa = Paint()..color = Colors.white.withValues(alpha: 0.75);
+  final puntos = <List<(Offset, double, Offset)>>[];
+  for (var i = 0; i < 6; i++) {
+    final a = math.pi * (0.16 + 0.68 * i / 5);
+    final dir = Offset(math.cos(a), math.sin(a));
+    final lado = Offset(-dir.dy, dir.dx);
+    final base = dir * r * 0.8;
+    puntos.add(<(Offset, double, Offset)>[
+      for (var k = 0; k <= pasos; k++)
+        (
+          base +
+              dir * (largo * k / pasos) +
+              lado *
+                  (math.sin(ahora * 5 + i * 1.3 - k / pasos * 3) *
+                      r *
+                      0.14 *
+                      k /
+                      pasos),
+          r * (0.14 - 0.09 * k / pasos),
+          lado,
+        ),
+    ]);
+  }
+  for (final tentaculo in puntos) {
+    for (final (p, grueso, _) in tentaculo) {
+      canvas.drawCircle(p, grueso, piel);
+    }
+  }
+  for (final tentaculo in puntos) {
+    for (var k = 1; k < pasos; k += 2) {
+      final (p, grueso, lado) = tentaculo[k];
+      canvas.drawCircle(p + lado * grueso * 0.25, grueso * 0.38, ventosa);
+    }
+  }
+}
+
+/// Las alas del dragoncito (aletean) y su colita con punta.
+void _alasYCola(Canvas canvas, double r, double ahora) {
+  final aleteo = math.sin(ahora * 8) * 0.3;
+  final relleno = Paint()..color = const Color(0xFFC5E1A5);
+  final borde = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = r * 0.03
+    ..strokeJoin = StrokeJoin.round
+    ..strokeCap = StrokeCap.round
+    ..color = const Color(0xFF558B2F);
+  for (final lado in <double>[-1, 1]) {
+    canvas.save();
+    canvas.translate(lado * r * 0.58, -r * 0.35);
+    canvas.rotate(lado * aleteo);
+    final ala = Path()
+      ..moveTo(0, 0)
+      ..quadraticBezierTo(lado * r * 0.3, -r * 0.72, lado * r * 0.72, -r * 0.62)
+      ..quadraticBezierTo(lado * r * 0.6, -r * 0.36, lado * r * 0.68, -r * 0.16)
+      ..quadraticBezierTo(lado * r * 0.48, -r * 0.14, lado * r * 0.44, r * 0.06)
+      ..quadraticBezierTo(lado * r * 0.26, -r * 0.02, 0, r * 0.2)
+      ..close();
+    canvas.drawPath(ala, relleno);
+    canvas.drawPath(ala, borde);
+    // Los "deditos" del ala.
+    for (final punta in <Offset>[
+      Offset(lado * r * 0.68, -r * 0.16),
+      Offset(lado * r * 0.44, r * 0.06),
+    ]) {
+      canvas.drawLine(Offset.zero, punta, borde);
+    }
+    canvas.restore();
+  }
+  // La colita.
+  final mueve = math.sin(ahora * 3) * r * 0.08;
+  final punta = Offset(r * 1.1, r * 0.5 + mueve);
+  canvas.drawPath(
+    Path()
+      ..moveTo(r * 0.45, r * 0.75)
+      ..quadraticBezierTo(r * 1.05, r * 1.05, punta.dx, punta.dy),
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = r * 0.13
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFF7CB342),
+  );
+  final flecha = Path()
+    ..moveTo(punta.dx, punta.dy - r * 0.2)
+    ..lineTo(punta.dx + r * 0.14, punta.dy + r * 0.04)
+    ..lineTo(punta.dx - r * 0.14, punta.dy + r * 0.04)
+    ..close();
+  canvas.drawPath(flecha, Paint()..color = const Color(0xFFFFCA28));
+  canvas.drawPath(flecha, borde);
+}
+
+/// Los gajos de colores de la pelota de playa (giran cuando rueda).
+void _gajosPelota(Canvas canvas, double r, double vuelta) {
+  canvas.save();
+  canvas.clipPath(
+    Path()..addOval(Rect.fromCircle(center: Offset.zero, radius: r)),
+  );
+  canvas.rotate(vuelta);
+  const pasos = 16;
+  for (var k = 0; k < 6; k++) {
+    final desde = -math.pi / 2 + k * math.pi / 6;
+    final hasta = desde + math.pi / 6;
+    final gajo = Path();
+    for (var j = 0; j <= pasos; j++) {
+      final y = -r + 2 * r * j / pasos;
+      final ancho = math.sqrt(math.max(0.0, 1 - (y / r) * (y / r)));
+      final x = r * math.sin(desde) * ancho;
+      if (j == 0) {
+        gajo.moveTo(x, y);
+      } else {
+        gajo.lineTo(x, y);
+      }
+    }
+    for (var j = pasos; j >= 0; j--) {
+      final y = -r + 2 * r * j / pasos;
+      final ancho = math.sqrt(math.max(0.0, 1 - (y / r) * (y / r)));
+      gajo.lineTo(r * math.sin(hasta) * ancho, y);
+    }
+    gajo.close();
+    canvas.drawPath(
+      gajo,
+      Paint()..color = coloresPelota[k].withValues(alpha: 0.55),
+    );
+  }
+  canvas.restore();
+}
+
+/// La espiral del remolino (gira).
+void _espiral(Canvas canvas, double r, double vuelta) {
+  canvas.save();
+  canvas.clipPath(
+    Path()..addOval(Rect.fromCircle(center: Offset.zero, radius: r)),
+  );
+  canvas.rotate(vuelta);
+  final trazo = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = r * 0.09
+    ..strokeCap = StrokeCap.round
+    ..color = Colors.white.withValues(alpha: 0.5);
+  for (var brazo = 0; brazo < 3; brazo++) {
+    final camino = Path();
+    for (var k = 0; k <= 24; k++) {
+      final f = k / 24;
+      final a = brazo * 2 * math.pi / 3 + f * 3.2;
+      final p = Offset(math.cos(a), math.sin(a)) * (r * (0.12 + 0.85 * f));
+      if (k == 0) {
+        camino.moveTo(p.dx, p.dy);
+      } else {
+        camino.lineTo(p.dx, p.dy);
+      }
+    }
+    canvas.drawPath(camino, trazo);
+  }
+  canvas.restore();
+}
+
+/// El viento que da vueltas alrededor del remolino.
+void _vientos(Canvas canvas, double r, double vuelta) {
+  final rect = Rect.fromCircle(center: Offset.zero, radius: r * 1.08);
+  for (var k = 0; k < 3; k++) {
+    final a = -vuelta * 1.3 + k * 2 * math.pi / 3;
+    canvas.drawArc(
+      rect,
+      a,
+      0.9,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = r * 0.09
+        ..color = const Color(0xFF00838F).withValues(alpha: 0.35),
+    );
+    canvas.drawArc(
+      rect,
+      a,
+      0.9,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeWidth = r * 0.05
+        ..color = Colors.white.withValues(alpha: 0.85),
+    );
+  }
+}
+
+/// Los cuernitos del dragón.
+void _cuernos(Canvas canvas, double r) {
+  for (final lado in <double>[-1, 1]) {
+    final base = Offset(lado * r * 0.42, -r * 0.84);
+    // De la base (del lado de adentro) a la punta, que se curva hacia
+    // afuera, y de vuelta a la base (del lado de afuera).
+    final cuerno = Path()
+      ..moveTo(base.dx - lado * r * 0.13, base.dy + r * 0.06)
+      ..quadraticBezierTo(
+        base.dx - lado * r * 0.02,
+        base.dy - r * 0.3,
+        base.dx + lado * r * 0.16,
+        base.dy - r * 0.42,
+      )
+      ..quadraticBezierTo(
+        base.dx + lado * r * 0.1,
+        base.dy - r * 0.14,
+        base.dx + lado * r * 0.13,
+        base.dy + r * 0.02,
+      )
+      ..close();
+    canvas.drawPath(cuerno, Paint()..color = const Color(0xFFFFF59D));
+    canvas.drawPath(
+      cuerno,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.03
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFFF9A825),
+    );
   }
 }
 
@@ -271,14 +623,16 @@ void pintarRayasPinata(Canvas canvas, double r, double ahora) {
   canvas.restore();
 }
 
-/// Lo que va ADELANTE de la burbuja del jefe (corona, gorro, Zzz).
-/// [despierta] = la dormilona está despierta.
+/// Lo que va ADELANTE de la burbuja del jefe (corona, gorro, Zzz,
+/// cuernitos, viento). [despierta] = la dormilona está despierta.
+/// [vuelta] = cuánto giró el remolino.
 void pintarJefeAdelante(
   Canvas canvas,
   TipoJefe jefe,
   double r,
   double ahora, {
   bool despierta = false,
+  double vuelta = 0,
   TextStyle? letra,
 }) {
   switch (jefe) {
@@ -287,6 +641,10 @@ void pintarJefeAdelante(
     case TipoJefe.dormilona:
       _gorro(canvas, r, ahora);
       if (!despierta) _zetas(canvas, r, ahora, letra);
+    case TipoJefe.dragon:
+      _cuernos(canvas, r);
+    case TipoJefe.remolino:
+      _vientos(canvas, r, vuelta);
     default:
       break;
   }

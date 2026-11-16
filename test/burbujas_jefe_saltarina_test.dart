@@ -8,9 +8,19 @@ import 'ayuda_pintar.dart';
 void main() {
   setUp(prepararPrueba);
 
-  testWidgets('La Burbuja Saltarina salta a otro lado con cada toque',
+  testWidgets(
+      'La Burbuja Saltarina da saltitos sola, y con cada toque salta lejos',
       (tester) async {
     final b = await abrirJefe(tester, TipoJefe.saltarina);
+    final juego = juegoBurbujas(tester);
+    var saltito = false;
+    for (var k = 0; k < 100 && !saltito; k++) {
+      await tester.pump(const Duration(milliseconds: 40));
+      saltito = b.saltando(juego.ahora);
+    }
+    expect(saltito, isTrue, reason: 'da saltitos sola');
+    await avanzar(tester, const Duration(milliseconds: 600));
+    expect(estaAdentro(tester, b), isTrue);
     final donde = b.centro;
     await tocarBurbuja(tester, b);
     await avanzar(tester, const Duration(milliseconds: 200));

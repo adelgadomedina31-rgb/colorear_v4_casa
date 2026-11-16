@@ -28,17 +28,38 @@ enum TipoBurbuja {
 
 /// Los jefes (ver burbujas_ajustes.dart).
 enum TipoJefe {
-  /// El Rey Burbuja, con corona: se achica con cada toque.
+  /// El Rey Burbuja, con corona: con cada toque se enoja de mentiritas y
+  /// sale corriendo.
   rey,
 
-  /// Con orejas de conejo: con cada toque salta a otro lado.
+  /// Con orejas de conejo: da saltitos, y con cada toque salta lejos.
   saltarina,
 
   /// Con gorro de dormir: duerme, y al tocarla se despierta y corre.
   dormilona,
 
-  /// Una piñata: con cada toque le caen burbujitas de dulce.
-  pinata;
+  /// Una piñata que se hamaca: con cada toque le caen burbujitas de dulce.
+  pinata,
+
+  /// Un fantasma: flota en zigzag y con cada toque dice "¡buu!", se
+  /// esconde y aparece en otro lado.
+  fantasma,
+
+  /// Un pulpo con tentáculos: nada a empujoncitos, y con cada toque sale
+  /// disparado soltando burbujitas para atrás.
+  pulpo,
+
+  /// Un dragoncito con alas: vuela haciendo olas, y con cada toque
+  /// estornuda chispitas de colores.
+  dragon,
+
+  /// Una pelota de playa: rebota y rebota en el piso, y con cada toque
+  /// pega un salto muy alto.
+  pelota,
+
+  /// Un remolino: da vueltas y vueltas, y con cada toque gira rapidísimo
+  /// y tira burbujitas en espiral.
+  remolino;
 
   /// Los jefes que están en la lista de burbujas_ajustes.dart (en ese
   /// orden). Los nombres que no existen no cuentan.
@@ -151,21 +172,43 @@ class PlanNivel {
   ];
 
   /// Arma el nivel [numero]. Usa [azar] para los niveles tranquilos, la
-  /// sorpresa de cada nivel y los jefes. [nivelesSinJefe] = cuántos
-  /// niveles seguidos van sin jefe (0 = el anterior tuvo jefe: este no
-  /// tiene). [jefeAnterior] = el último jefe que salió (no se repite).
+  /// sorpresa de cada nivel y qué jefe viene. [nivelesSinJefe] = cuántos
+  /// niveles seguidos van sin jefe. [jefesRecientes] = los últimos jefes
+  /// que salieron (el último al final): no se repiten enseguida.
   factory PlanNivel.para(
     int numero,
     math.Random azar, {
     int nivelesSinJefe = 1,
-    TipoJefe? jefeAnterior,
+    List<TipoJefe> jefesRecientes = const <TipoJefe>[],
+  }) =>
+      _armar(
+        numero,
+        azar,
+        elegirJefe: (n) => _elegirJefe(n, azar, nivelesSinJefe, jefesRecientes),
+      );
+
+  /// El nivel [numero] con el jefe [jefe] (para las pruebas): sin nivel
+  /// tranquilo.
+  factory PlanNivel.deJefe(int numero, TipoJefe jefe) => _armar(
+        numero,
+        math.Random(numero),
+        elegirJefe: (_) => jefe,
+        conTranquilo: false,
+      );
+
+  static PlanNivel _armar(
+    int numero,
+    math.Random azar, {
+    required TipoJefe? Function(int n) elegirJefe,
+    bool conTranquilo = true,
   }) {
     final n = math.max(1, numero);
 
     // A veces, un nivel más tranquilo (nunca en los primeros).
     var d = n;
     var tranquilo = false;
-    if (n > 3 &&
+    if (conTranquilo &&
+        n > 3 &&
         AjustesBurbujas.nivelesMasFacil > 0 &&
         azar.nextDouble() < AjustesBurbujas.probabilidadNivelTranquilo) {
       d = math.max(1, n - 1 - azar.nextInt(AjustesBurbujas.nivelesMasFacil));
@@ -192,40 +235,10 @@ class PlanNivel {
       cantidades[tipo] = math.min(_maximo(tipo), cuantas);
     }
 
-    final aLaVez = _aLaVez(d);
-    final velocidad = _velocidad(d);
-    final giros = _giros(d);
-
-    // ¿Nivel de jefe? Nunca dos seguidos, ni cuando aparece una burbuja
-    // nueva. La primera vez, el primero de la lista.
-    final jefes = TipoJefe.deLosAjustes;
-    final desdeJefe = AjustesBurbujas.jefeDesdeNivel;
-    if (jefes.isNotEmpty &&
-        desdeJefe > 0 &&
-        n >= desdeJefe &&
-        nuevos.isEmpty &&
-        nivelesSinJefe > 0) {
-      TipoJefe? jefe;
-      if (n == desdeJefe) {
-        jefe = jefes.first;
-      } else if (nivelesSinJefe >= AjustesBurbujas.nivelesSinJefeMaximo ||
-          azar.nextDouble() < AjustesBurbujas.probabilidadJefe) {
-        final otros = jefes.where((j) => j != jefeAnterior).toList();
-        final opciones = otros.isEmpty ? jefes : otros;
-        jefe = opciones[azar.nextInt(opciones.length)];
-      }
-      if (jefe != null) {
-        return PlanNivel._conJefe(
-          numero: n,
-          dificultad: d,
-          tranquilo: tranquilo,
-          jefe: jefe,
-          aLaVez: aLaVez,
-          velocidad: velocidad,
-          giros: giros,
-        );
-      }
-    }
+    // El jefe del nivel (si le toca).
+    final jefe = elegirJefe(n);
+    var toques = jefe == null ? 0 : _toquesJefe(d);
+    if (jefe != null) cantidades[TipoBurbuja.jefe] = 1;
 
     // La sorpresa (desde el nivel 2): un tipo viene con más (si no es el
     // nuevo del nivel), así cada nivel es un poco distinto.
@@ -244,18 +257,22 @@ class PlanNivel {
       );
     }
 
-    final plan = PlanNivel._(
-      numero: n,
-      dificultad: d,
-      tranquilo: tranquilo,
-      cantidades: cantidades,
-      aLaVez: aLaVez,
-      velocidad: velocidad,
-      giros: giros,
-      nuevos: nuevos,
-    );
-    // Primero se sacan normales (quedan al menos 3) y, si todavía sobran,
-    // de a una especial (queda al menos una de cada tipo).
+    PlanNivel armar() => PlanNivel._(
+          numero: n,
+          dificultad: d,
+          tranquilo: tranquilo,
+          cantidades: cantidades,
+          aLaVez: _aLaVez(d),
+          velocidad: _velocidad(d),
+          giros: _giros(d),
+          nuevos: nuevos,
+          jefe: jefe,
+          toquesJefe: toques,
+        );
+    var plan = armar();
+    // Que no pase del máximo: primero se sacan normales (quedan al menos
+    // 3); si todavía sobran, de a una especial (queda al menos una de cada
+    // tipo), y al final, toques del jefe (le quedan al menos 3).
     final sobra = plan.total - AjustesBurbujas.totalMaximo;
     if (sobra > 0) {
       cantidades[TipoBurbuja.normal] = math.max(
@@ -282,7 +299,56 @@ class PlanNivel {
         sinSacar++;
       }
     }
+    while (plan.total > AjustesBurbujas.totalMaximo && toques > 3) {
+      toques--;
+      plan = armar();
+    }
     return plan;
+  }
+
+  /// Qué jefe viene en el nivel [n] (null = ninguno). La primera vez, el
+  /// primero de la lista; después, uno al azar que no haya salido hace
+  /// poco.
+  static TipoJefe? _elegirJefe(
+    int n,
+    math.Random azar,
+    int nivelesSinJefe,
+    List<TipoJefe> recientes,
+  ) {
+    final jefes = TipoJefe.deLosAjustes;
+    final desde = AjustesBurbujas.jefeDesdeNivel;
+    if (jefes.isEmpty || desde <= 0 || n < desde) return null;
+    if (n == desde) return jefes.first;
+    final toca = AjustesBurbujas.probabilidadJefe >= 1 ||
+        nivelesSinJefe >= AjustesBurbujas.nivelesSinJefeMaximo ||
+        azar.nextDouble() < AjustesBurbujas.probabilidadJefe;
+    if (!toca) return null;
+    // No se repiten los últimos (los que se puedan, dejando al menos dos
+    // para elegir).
+    final evitar = math.min(jefesSinRepetir, jefes.length - 2);
+    final ultimos = evitar <= 0
+        ? const <TipoJefe>[]
+        : recientes.sublist(math.max(0, recientes.length - evitar));
+    final opciones = jefes.where((j) => !ultimos.contains(j)).toList();
+    final lista = opciones.isEmpty ? jefes : opciones;
+    return lista[azar.nextInt(lista.length)];
+  }
+
+  /// Cuántos de los últimos jefes no se repiten.
+  static const int jefesSinRepetir = 4;
+
+  /// Cuántos toques necesita el jefe en un nivel de dificultad [d].
+  static int _toquesJefe(int d) {
+    final desde = math.max(1, AjustesBurbujas.jefeDesdeNivel);
+    return math.max(
+      2,
+      math.min(
+        AjustesBurbujas.toquesJefeMaximo,
+        AjustesBurbujas.toquesJefeAlEmpezar +
+            math.max(0, d - desde) ~/
+                math.max(1, AjustesBurbujas.nivelesParaUnToqueMas),
+      ),
+    );
   }
 
   static int _aLaVez(int d) => math.min(
@@ -305,78 +371,9 @@ class PlanNivel {
             (d - 1) * AjustesBurbujas.girosMasPorNivel,
       );
 
-  /// El nivel [numero] con el jefe [jefe] (para las pruebas).
-  factory PlanNivel.deJefe(int numero, TipoJefe jefe) {
-    final n = math.max(1, numero);
-    return PlanNivel._conJefe(
-      numero: n,
-      dificultad: n,
-      tranquilo: false,
-      jefe: jefe,
-      aLaVez: _aLaVez(n),
-      velocidad: _velocidad(n),
-      giros: _giros(n),
-    );
-  }
-
-  /// Un nivel de jefe: el jefe y unas pocas burbujas normales.
-  factory PlanNivel._conJefe({
-    required int numero,
-    required int dificultad,
-    required bool tranquilo,
-    required TipoJefe jefe,
-    required int aLaVez,
-    required double velocidad,
-    required double giros,
-  }) {
-    final desde = math.max(1, AjustesBurbujas.jefeDesdeNivel);
-    var toques = math.min(
-      AjustesBurbujas.toquesJefeMaximo,
-      AjustesBurbujas.toquesJefeAlEmpezar +
-          math.max(0, dificultad - desde) ~/
-              math.max(1, AjustesBurbujas.nivelesParaUnToqueMas),
-    );
-    toques = math.max(2, toques);
-    final cantidades = <TipoBurbuja, int>{
-      TipoBurbuja.normal: math.max(0, AjustesBurbujas.normalesConJefe),
-      TipoBurbuja.jefe: 1,
-    };
-    PlanNivel armar() => PlanNivel._(
-          numero: numero,
-          dificultad: dificultad,
-          tranquilo: tranquilo,
-          cantidades: cantidades,
-          aLaVez: aLaVez,
-          velocidad: velocidad,
-          giros: giros,
-          nuevos: const <TipoBurbuja>[],
-          jefe: jefe,
-          toquesJefe: toques,
-        );
-    // Que no pase del máximo: primero menos toques, después menos normales.
-    var plan = armar();
-    while (plan.total > AjustesBurbujas.totalMaximo && toques > 2) {
-      toques--;
-      plan = armar();
-    }
-    while (plan.total > AjustesBurbujas.totalMaximo &&
-        plan.cuantas(TipoBurbuja.normal) > 0) {
-      cantidades[TipoBurbuja.normal] = plan.cuantas(TipoBurbuja.normal) - 1;
-      plan = armar();
-    }
-    return plan;
-  }
-
-  /// El orden en que salen: el jefe primero; si no hay jefe, las dos
-  /// primeras siempre normales. Las demás, mezcladas.
+  /// El orden en que salen: el jefe primero (si hay), después dos
+  /// normales, y las demás mezcladas.
   List<TipoBurbuja> orden(math.Random azar) {
-    if (jefe != null) {
-      return <TipoBurbuja>[
-        TipoBurbuja.jefe,
-        for (var i = 0; i < cuantas(TipoBurbuja.normal); i++)
-          TipoBurbuja.normal,
-      ];
-    }
     final normales = cuantas(TipoBurbuja.normal);
     final primeras = math.min(2, normales);
     final resto = <TipoBurbuja>[
@@ -385,6 +382,7 @@ class PlanNivel {
         for (var i = 0; i < cuantas(tipo); i++) tipo,
     ]..shuffle(azar);
     return <TipoBurbuja>[
+      if (jefe != null) TipoBurbuja.jefe,
       for (var i = 0; i < primeras; i++) TipoBurbuja.normal,
       ...resto,
     ];

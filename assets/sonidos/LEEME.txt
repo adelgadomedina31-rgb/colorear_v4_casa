@@ -23,17 +23,28 @@ animales/
                        opcionales. Ver animales/LEEME.txt
 
 burbujas/
-   explosion1.wav ... explosion6.wav ... la burbuja que revienta: brillitos,
-                       campanitas, fuegos de color, arpa mágica, gotitas
-                       de agua y confeti (van turnándose)
-   pop1.wav ... pop4.wav ... el "¡blup!" de antes (ya no se usa)
-   super_toque.wav ......... cada toque a la súper burbuja, la mega o un jefe
-   super_pop.wav ........... la súper, la mega o un jefe que revientan
-   ay1.wav ... ay4.wav ..... el "¡ay!" de antes (quitado; ver sonidosAy)
-   jiji.wav ................ la risita de las burbujas y de la mascota
+   pompa1.wav ... pompa8.wav ... la burbuja que revienta: un "plip" delicado
+                       y una notita de cajita de música (cada una en una
+                       nota, van subiendo y bajando como una melodía)
+   pompa_grande.wav ........ la súper o la mega que revientan
+   toque_jefe.wav .......... cada toque a un jefe ("¡bwoing!"), y cuando llega
+   pompa_jefe.wav .......... un jefe que revienta (bum suave y notitas)
+   buu.wav ................. el "¡buu!" de la Burbuja Fantasma
+   zumm.wav ................ el remolino y el pulpo cuando salen disparados
+   miau.wav ................ el gatito cuando lo tocas (suave y delicado)
+   guau.wav ................ el perrito cuando lo tocas
+   pio.wav ................. el pollito cuando lo tocas
+   super_toque.wav ......... cada toque a la súper burbuja o a la mega
+   jiji.wav ................ la risita de las burbujas (y del pececito)
    soplo.wav ............... la mascota que sopla una burbuja
    aplausos.wav ............ la mascota que aplaude
    jefe.wav ................ la fanfarria cuando llega un jefe
+   explosion1.wav ... explosion6.wav ... las explosiones de antes (brillitos,
+                       campanitas, fuegos de color, arpa mágica, gotitas y
+                       confeti). El dragón usa explosion3 (fuegos)
+   super_pop.wav ........... el "¡pum!" de antes de la súper y la mega
+   pop1.wav ... pop4.wav ... el "¡blup!" de más antes (ya no se usa)
+   ay1.wav ... ay4.wav ..... el "¡ay!" de antes (quitado; ver sonidosAy)
 
 contar/
    nota1.wav ... nota10.wav ... la notita al contar cada cosa (va subiendo)

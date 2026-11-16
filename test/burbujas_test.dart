@@ -1,5 +1,6 @@
 import 'package:colorear_ninos/juegos/burbujas/burbujas_ajustes.dart';
 import 'package:colorear_ninos/juegos/burbujas/burbujas_juego.dart';
+import 'package:colorear_ninos/juegos/burbujas/niveles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,29 +14,37 @@ void main() {
   setUp(prepararPrueba);
 
   testWidgets(
-      'Burbujas: salen de a poco por los lados, flotan sin salirse, con un '
-      'toque revientan, y al reventar todas hay un festejo corto y el nivel 2 '
-      'empieza enseguida (y queda guardado)', (tester) async {
+      'Burbujas: llega el jefe, salen de a poco por los lados, flotan sin '
+      'salirse, con un toque revientan, y al reventar todas hay un festejo '
+      'corto y el nivel 2 empieza enseguida (y queda guardado)',
+      (tester) async {
     sinAvisosDeSonido();
     await tester.binding.setSurfaceSize(const Size(420, 860));
     await tester.pumpWidget(const MaterialApp(home: BurbujasJuego(semilla: 7)));
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Nunca jugó: empieza en el nivel 1.
+    // Nunca jugó: empieza en el nivel 1, con el Rey Burbuja (y sus
+    // burbujitas) y las burbujas del nivel.
     final juego = juegoBurbujas(tester);
     expect(juego.nivel, 1);
     final total = juego.total;
-    expect(total, AjustesBurbujas.burbujasAlEmpezar);
-    expect(frases.last, AjustesBurbujas.vozInicio);
+    expect(total,
+        AjustesBurbujas.burbujasAlEmpezar + 1 + juego.plan!.burbujitasDelJefe);
+    expect(frases.last, AjustesBurbujas.vozJefes['rey']);
     expect(find.text('NIVEL 1'), findsOneWidget);
     expect(burbujasFaltan(tester), total);
     expect(juego.burbujas, isEmpty);
 
-    // Van saliendo de a una: desde afuera de la pantalla, o la sopla la
-    // mascota desde abajo (chiquita, y va creciendo).
+    // Van saliendo de a una (primero el jefe, desde arriba): desde afuera
+    // de la pantalla, o la sopla la mascota desde abajo (chiquita, y va
+    // creciendo).
     await avanzar(tester, const Duration(milliseconds: 680));
     expect(juego.burbujas, hasLength(1));
-    final primera = juego.burbujas.first;
+    expect(juego.burbujas.first.tipo, TipoBurbuja.jefe);
+    for (var k = 0; k < 100 && juego.burbujas.length < 2; k++) {
+      await tester.pump(const Duration(milliseconds: 40));
+    }
+    final primera = juego.burbujas[1];
     if (primera.soplada) {
       final boca = juego.mascota!.boca(zonaBurbujas(tester).size);
       expect((primera.centro - boca).distance, lessThan(primera.radio),
@@ -53,7 +62,7 @@ void main() {
     // salen (rebotan en los bordes).
     final aLaVez = juego.plan!.aLaVez;
     final tam = zonaBurbujas(tester).size;
-    final lados = <String>{};
+    final lados = <String>{'arriba'}; // el jefe
     for (var s = 0; s < 40; s++) {
       await avanzar(tester, const Duration(milliseconds: 500));
       expect(juego.burbujas.length, lessThanOrEqualTo(aLaVez));
@@ -77,7 +86,7 @@ void main() {
         reason: 'salen por distintos lados: $lados');
 
     // Se mueven.
-    final una = juego.burbujas.first;
+    final una = juego.burbujas.firstWhere((b) => b.tipo == TipoBurbuja.normal);
     final antes = una.centro;
     await avanzar(tester, const Duration(seconds: 1));
     expect((una.centro - antes).distance, greaterThan(10));

@@ -191,18 +191,23 @@ Future<void> pasarDeNivel(WidgetTester tester) async {
   expect(juego.nivel, nivel + 1);
 }
 
-/// Abre un nivel del jefe [jefe] (en el nivel 12) y espera a que entre a la
-/// pantalla.
+/// Abre un nivel del jefe [jefe] (en el nivel 2, con pocas burbujas más) y
+/// espera a que llegue a la pantalla.
 Future<Burbuja> abrirJefe(WidgetTester tester, TipoJefe jefe) async {
   sinAvisosDeSonido();
   await tester.binding.setSurfaceSize(const Size(420, 860));
   await tester.pumpWidget(MaterialApp(
-      home: BurbujasJuego(nivelInicial: 12, semilla: 5, jefe: jefe)));
+      home: BurbujasJuego(nivelInicial: 2, semilla: 5, jefe: jefe)));
   await tester.pump(const Duration(milliseconds: 100));
   expect(juegoBurbujas(tester).plan!.jefe, jefe);
   expect(frases.last, AjustesBurbujas.vozJefes[jefe.name]);
   final b = await esperarBurbuja(tester, TipoBurbuja.jefe);
   expect(b.jefe, jefe);
+  // Espera a que termine de llegar (baja rápido y hace temblar todo).
+  for (var k = 0; k < 200 && !b.llego; k++) {
+    await tester.pump(const Duration(milliseconds: 40));
+  }
+  expect(b.llego, isTrue, reason: 'el jefe llegó');
   return b;
 }
 

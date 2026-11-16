@@ -27,9 +27,9 @@ import 'package:colorear_ninos/juegos/burbujas/niveles.dart';
 ///  2. Flotan por toda la pantalla, cada una a su velocidad, cambiando de
 ///     dirección y rebotando en los bordes y entre ellas. Tienen carita:
 ///     parpadean y se ríen.
-///  3. Con un toque revientan: "¡AY!", gotitas, papelitos y estrellitas.
-///     Hay tipos especiales (súper, animalito, mega, rápidas) y, de vez en
-///     cuando, niveles de jefe: ver burbujas_ajustes.dart.
+///  3. Con un toque revientan: "¡POP!", gotitas, papelitos y estrellitas.
+///     Hay tipos especiales (súper, animalito, mega, rápidas) y en cada
+///     nivel llega un jefe gigante: ver burbujas_ajustes.dart.
 ///  4. Arriba se ve cuántas lleva y cuántas faltan. Cuando revienta todas,
 ///     la mascota aplaude, un festejo corto (o la celebración grande cada 5
 ///     niveles) y empieza el nivel siguiente. Los niveles no se acaban
@@ -98,15 +98,21 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   bool _hayMundo = false;
   Mascota? _mascota;
 
-  /// Para que los jefes salgan de vez en cuando (nunca dos seguidos).
+  /// Para que no salga el mismo jefe muy seguido.
   int _nivelesSinJefe = 1;
-  TipoJefe? _ultimoJefe;
+  final List<TipoJefe> _jefesRecientes = <TipoJefe>[];
+
+  /// La pantalla que tiembla (cuando llega un jefe, cuando lo tocas...).
+  double _temblorInicio = -10;
+  double _temblorFuerza = 0;
+  double _temblorDuracion = 0.5;
 
   int _numeroNivel = 0; // 0 = todavía no empezó
   PlanNivel? _plan;
   final List<Burbuja> _burbujas = <Burbuja>[];
   final List<Estallido> _estallidos = <Estallido>[];
   final List<AnimalLibre> _animales = <AnimalLibre>[];
+  final List<Llamarada> _llamaradas = <Llamarada>[];
 
   /// Las que faltan por salir en este nivel.
   List<TipoBurbuja> _porSalir = <TipoBurbuja>[];
@@ -141,22 +147,30 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   Mundo get mundo => _vista.mundo;
   @visibleForTesting
   Mascota? get mascota => _mascota;
+  @visibleForTesting
+  Offset get temblor => _temblor();
+  @visibleForTesting
+  int get llamaradas => _llamaradas.length;
 
   @override
   void initState() {
     super.initState();
     Voz.preparar();
-    Sonidos.preparar(<String>[
+    Sonidos.preparar(<String>{
       ...AjustesBurbujas.sonidosPop,
       AjustesBurbujas.sonidoSuperToque,
       AjustesBurbujas.sonidoSuperPop,
+      AjustesBurbujas.sonidoToqueJefe,
+      AjustesBurbujas.sonidoJefePop,
+      ...AjustesBurbujas.sonidosJefes.values,
       AjustesBurbujas.sonidoAnimalito,
       ...AjustesBurbujas.sonidosAy,
       AjustesBurbujas.sonidoRisa,
+      ...AjustesBurbujas.sonidosMascotas.values,
       AjustesBurbujas.sonidoSoplo,
       AjustesBurbujas.sonidoAplausos,
       AjustesBurbujas.sonidoJefe,
-    ]);
+    }.toList());
     Animaciones.preparar(<String>[
       ...AjustesBurbujas.animacionesMascotas.values,
       ...AjustesBurbujas.fondosAnimados.values,
@@ -246,11 +260,13 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
             numero,
             _azar,
             nivelesSinJefe: _nivelesSinJefe,
-            jefeAnterior: _ultimoJefe,
+            jefesRecientes: _jefesRecientes,
           );
-    if (plan.jefe != null) {
+    final elJefe = plan.jefe;
+    if (elJefe != null) {
       _nivelesSinJefe = 0;
-      _ultimoJefe = plan.jefe;
+      _jefesRecientes.add(elJefe);
+      if (_jefesRecientes.length > 8) _jefesRecientes.removeAt(0);
     } else {
       _nivelesSinJefe++;
     }
@@ -260,6 +276,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
       _porSalir = plan.orden(_azar);
       _total = plan.total;
       _burbujas.clear();
+      _llamaradas.clear();
       _reventadas = 0;
       _terminoNivel = false;
       _proximaSalida = _ahora + 0.5;
@@ -268,12 +285,12 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     ProgresoBurbujas.guardar(plan.numero);
     _mostrarCartel('NIVEL ${plan.numero}', AjustesBurbujas.segundosCartelNivel);
 
-    // La voz: al entrar, qué hacer; en cada nivel, su número y lo nuevo (el
-    // jefe, una burbuja nueva o el mundo).
+    // La voz: al entrar, qué hacer; en cada nivel, su número y lo nuevo (una
+    // burbuja nueva, el jefe o el mundo).
     final jefe = plan.jefe;
-    String? queHay = jefe == null ? null : AjustesBurbujas.vozJefes[jefe.name];
-    if (queHay == null && plan.nuevos.isNotEmpty) {
-      queHay = _vozDe(plan.nuevos.first);
+    String? queHay = plan.nuevos.isEmpty ? null : _vozDe(plan.nuevos.first);
+    if (queHay == null && jefe != null) {
+      queHay = AjustesBurbujas.vozJefes[jefe.name];
     }
     if (jefe != null) Sonidos.tocar(AjustesBurbujas.sonidoJefe);
     final numeroNivel = AjustesBurbujas.vozNivel.replaceAll(
@@ -309,6 +326,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     _salir();
     _estallidos.removeWhere((e) => e.terminado(_ahora));
     _animales.removeWhere((a) => a.terminado(_ahora));
+    _llamaradas.removeWhere((l) => l.terminado(_ahora));
     _cuadro.value++;
   }
 
@@ -334,7 +352,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         TipoBurbuja.superBurbuja => 0.75,
         TipoBurbuja.mega => 0.55,
         TipoBurbuja.animalito => 0.9,
-        TipoBurbuja.jefe => 0.4,
+        TipoBurbuja.jefe => AjustesBurbujas.rapidezJefe,
         TipoBurbuja.rapida => AjustesBurbujas.velocidadRapidas,
         TipoBurbuja.chica => 1.3,
         TipoBurbuja.normal => 1.0,
@@ -425,7 +443,10 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
             : null,
         jefe: jefe,
         soplada: soplada,
-      )..proximoCambio = _ahora + _entre(0.8, 2.0),
+      )
+        ..proximoCambio = _ahora + _entre(0.8, 2.0)
+        ..proximoSaltito = _ahora + _entre(2.5, 3.5)
+        ..vx = (_azar.nextBool() ? 1 : -1) * w * 0.22,
     );
     _proximaSalida = _ahora +
         _entre(
@@ -446,6 +467,11 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     for (final b in _burbujas) {
       b.golpe = math.max(0, b.golpe - dt * 2.2);
       final r = b.radio;
+      final jefe = b.jefe;
+      // El remolino gira y gira (rapidísimo cuando lo tocan).
+      if (jefe == TipoJefe.remolino) {
+        b.vuelta += dt * (b.apurado(_ahora) ? 12 : 3);
+      }
       // La saltarina en el aire: va de un lugar al otro dando un salto.
       if (b.saltando(_ahora)) {
         final f = ((_ahora - b.saltoInicio) / Burbuja.duracionSalto).clamp(
@@ -455,6 +481,26 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         final e = Curves.easeInOut.transform(f);
         b.centro = Offset.lerp(b.saltoDesde, b.saltoHasta, e)! -
             Offset(0, math.sin(f * math.pi) * r * 0.9);
+        continue;
+      }
+      // El fantasma escondido: cuando ya no se ve, aparece en el otro lado.
+      if (b.escondiendo(_ahora)) {
+        if (_ahora - b.escondeInicio >= Burbuja.duracionEscondida / 2) {
+          b.centro = b.escondeHasta;
+        }
+        continue;
+      }
+      // La pelota rebota en el piso.
+      if (jefe == TipoJefe.pelota) {
+        _rebotar(b, dt, tam);
+        continue;
+      }
+      // La saltarina da saltitos sola, de vez en cuando.
+      if (jefe == TipoJefe.saltarina &&
+          b.adentro &&
+          _ahora >= b.proximoSaltito) {
+        _saltar(b, lejos: false);
+        b.proximoSaltito = _ahora + _entre(2.2, 3.4);
         continue;
       }
       if (b.adentro) {
@@ -469,6 +515,20 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         }
         b.giro += (b.giroBuscado - b.giro) * math.min(1.0, dt * 2);
         b.rumbo += b.giro * dt;
+        // Cada jefe se mueve a su manera.
+        switch (jefe) {
+          case TipoJefe.fantasma:
+            // Flota en zigzag.
+            b.rumbo += math.sin(_ahora * 2.6 + b.fase) * 2.4 * dt;
+          case TipoJefe.dragon:
+            // Vuela haciendo olas.
+            b.rumbo += math.cos(_ahora * 1.8 + b.fase) * 1.8 * dt;
+          case TipoJefe.remolino:
+            // Da vueltas.
+            b.rumbo += (b.apurado(_ahora) ? 3.4 : 1.7) * dt;
+          default:
+            break;
+        }
       } else {
         // Mientras entra, si se está alejando, vuelve hacia el medio.
         final hacia = centroZona - b.centro;
@@ -478,15 +538,29 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         }
       }
       var v = b.velocidad * (1 + 0.25 * math.sin(_ahora * 0.9 + b.fase));
-      // La dormilona va lentito mientras duerme, y corre cuando la despiertan.
-      if (b.jefe == TipoJefe.dormilona) v *= b.despierta(_ahora) ? 2.2 : 0.35;
+      v *= switch (jefe) {
+        // La dormilona va lentito mientras duerme, y corre cuando la
+        // despiertan.
+        TipoJefe.dormilona => b.despierta(_ahora) ? 2.2 : 0.35,
+        // El pulpo nada a empujoncitos.
+        TipoJefe.pulpo => 0.35 + 2.4 * pulsoPulpo(_ahora, b.fase),
+        TipoJefe.fantasma || TipoJefe.dragon => 1.5,
+        TipoJefe.remolino => 2.0,
+        _ => 1.0,
+      };
+      // Los que salen corriendo cuando los tocas.
+      if (jefe != null && b.apurado(_ahora)) v *= 2.6;
+      // El jefe baja rápido hasta entrar a la pantalla.
+      if (jefe != null && !b.adentro) v = math.max(v, tam.shortestSide * 0.3);
       b.centro += Offset(math.cos(b.rumbo), math.sin(b.rumbo)) * v * dt;
 
       final c = b.centro;
       final arriba = b.margenArriba;
+      final abajo = b.margenAbajo;
       if (!b.adentro) {
-        if (c.dx >= r && c.dx <= w - r && c.dy >= arriba && c.dy <= h - r) {
+        if (c.dx >= r && c.dx <= w - r && c.dy >= arriba && c.dy <= h - abajo) {
           b.adentro = true;
+          if (jefe != null) _llegoJefe(b);
         }
         continue;
       }
@@ -498,7 +572,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         dx = -dx;
         reboto = true;
       }
-      if ((c.dy < arriba && dy < 0) || (c.dy > h - r && dy > 0)) {
+      if ((c.dy < arriba && dy < 0) || (c.dy > h - abajo && dy > 0)) {
         dy = -dy;
         reboto = true;
       }
@@ -509,6 +583,70 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
       }
     }
     _chocar();
+  }
+
+  /// La pelota: cae, rebota en el piso (siempre hasta casi arriba), rueda
+  /// y rebota en las paredes.
+  void _rebotar(Burbuja b, double dt, Size tam) {
+    final r = b.radio;
+    final techo = b.margenArriba;
+    final suelo = tam.height - b.margenAbajo;
+    final alto = math.max(r, suelo - techo);
+    final rebote = alto * 0.8;
+    // Tarda 0.85 segundos en subir hasta arriba.
+    final gravedad = 2 * rebote / (0.85 * 0.85);
+    b.vy += gravedad * dt;
+    var c = b.centro + Offset(b.vx, b.vy) * dt;
+    b.vuelta += b.vx / math.max(1.0, r) * dt;
+    if (c.dy > suelo && b.vy > 0) {
+      c = Offset(c.dx, suelo);
+      b.vy = -math.sqrt(2 * gravedad * rebote);
+      b.golpe = math.max(b.golpe, 0.55);
+      _llegoJefe(b);
+    }
+    // Rebota en las paredes (también mientras entra).
+    final w = tam.width;
+    if ((c.dx < r && b.vx < 0) || (c.dx > w - r && b.vx > 0)) b.vx = -b.vx;
+    c = Offset(
+      c.dx.clamp(math.min(r, w / 2), math.max(w - r, w / 2)),
+      c.dy,
+    );
+    if (b.adentro) {
+      if (c.dy < techo && b.vy < 0) b.vy = 0;
+    } else if (c.dy >= techo && c.dy <= suelo) {
+      b.adentro = true;
+    }
+    b.centro = c;
+  }
+
+  /// El jefe llegó: hace temblar la pantalla con un "¡bwoing!".
+  void _llegoJefe(Burbuja b) {
+    if (b.llego) return;
+    b.llego = true;
+    b.golpe = 1;
+    _temblar(10, 0.55);
+    Sonidos.tocar(AjustesBurbujas.sonidoToqueJefe);
+  }
+
+  /// La pantalla tiembla [fuerza] píxeles (en un teléfono normal) durante
+  /// [segundos].
+  void _temblar(double fuerza, double segundos) {
+    if (!AjustesBurbujas.temblorConJefes) return;
+    final lado = _tam?.shortestSide ?? 400;
+    final nueva = fuerza * lado / 400;
+    // Si ya está temblando más fuerte, sigue así.
+    if (_temblor().distance > nueva) return;
+    _temblorInicio = _ahora;
+    _temblorFuerza = nueva;
+    _temblorDuracion = segundos;
+  }
+
+  /// Cuánto se corre todo ahora por el temblor.
+  Offset _temblor() {
+    final t = _ahora - _temblorInicio;
+    if (t < 0 || t >= _temblorDuracion) return Offset.zero;
+    final f = _temblorFuerza * math.pow(1 - t / _temblorDuracion, 2);
+    return Offset(math.sin(t * 71) * f, math.cos(t * 53) * f * 0.7);
   }
 
   /// Dos burbujas que se tocan se empujan y rebotan una con la otra (así no
@@ -543,9 +681,10 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     if (tam == null) return p;
     final r = b.radio;
     final arriba = math.min(b.margenArriba, tam.height / 2);
+    final abajo = math.min(b.margenAbajo, tam.height / 2);
     return Offset(
       p.dx.clamp(r, math.max(r, tam.width - r)),
-      p.dy.clamp(arriba, math.max(arriba, tam.height - r)),
+      p.dy.clamp(arriba, math.max(arriba, tam.height - abajo)),
     );
   }
 
@@ -570,6 +709,8 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     if (!_terminoNivel) {
       var mejor = double.infinity;
       for (final b in _burbujas) {
+        // El fantasma mientras está escondido no se puede tocar.
+        if (b.opacidad(_ahora) < 0.35) continue;
         final limite = b.radio * 1.15 + (b.chiquita ? 18 : 8);
         final cerca = (b.centro - p).distance / limite;
         if (cerca <= 1 && cerca < mejor) {
@@ -582,13 +723,17 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
       _tocar(tocada);
       return;
     }
-    // Si no tocó ninguna burbuja pero sí a la mascota: salta y se ríe.
+    // Si no tocó ninguna burbuja pero sí a la mascota: salta y habla
+    // ("miau", "guau", "pío"... o se ríe).
     final m = _mascota;
     final tam = _tam;
     if (m != null && tam != null && m.lugar(tam).inflate(8).contains(p)) {
       if (!m.saltando(_ahora)) {
         m.salto = _ahora;
-        Sonidos.tocar(AjustesBurbujas.sonidoRisa);
+        Sonidos.tocar(
+          AjustesBurbujas.sonidosMascotas[m.emoji] ??
+              AjustesBurbujas.sonidoRisa,
+        );
       }
     }
   }
@@ -596,26 +741,20 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   void _tocar(Burbuja b) {
     // Le faltan toques: "boing", se achica un poco y se ríe.
     if (b.toques > 1) {
+      final jefe = b.jefe;
       setState(() {
         b.toques--;
         b.golpe = 1;
         b.risa = _ahora;
-        final jefe = b.jefe;
         if (jefe != null) {
-          // El jefe se va achicando hasta [jefeAchicaHasta] y suelta
-          // burbujitas.
+          // El jefe se va achicando hasta [jefeAchicaHasta], hace lo suyo y
+          // suelta burbujitas.
           final f = (b.toques - 1) / math.max(1, b.toquesTotales - 1);
           final hasta = AjustesBurbujas.jefeAchicaHasta.clamp(0.1, 1.0);
           b.radio = b.radioInicial * (hasta + (1 - hasta) * f);
+          _haceLoSuyo(b, jefe);
           _soltarChicas(b, AjustesBurbujas.burbujitasPorToqueJefe);
-          switch (jefe) {
-            case TipoJefe.saltarina:
-              _saltar(b);
-            case TipoJefe.dormilona:
-              b.despiertaHasta = _ahora + 2.5;
-            default:
-              break;
-          }
+          _temblar(5, 0.3);
         } else {
           b.radio *= b.tipo == TipoBurbuja.mega ? 0.95 : 0.93;
         }
@@ -630,35 +769,124 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
           ),
         );
       });
-      Sonidos.tocar(AjustesBurbujas.sonidoSuperToque);
-      if (b.conCarita) Sonidos.tocar(AjustesBurbujas.sonidoRisa);
-      if (b.jefe == TipoJefe.saltarina) {
-        Sonidos.tocar(AjustesBurbujas.sonidoSalto);
+      final extra =
+          jefe == null ? null : AjustesBurbujas.sonidosJefes[jefe.name];
+      Sonidos.tocar(
+        jefe != null
+            ? AjustesBurbujas.sonidoToqueJefe
+            : AjustesBurbujas.sonidoSuperToque,
+      );
+      if (extra != null) {
+        Sonidos.tocar(extra);
+      } else if (b.conCarita) {
+        Sonidos.tocar(AjustesBurbujas.sonidoRisa);
       }
       return;
     }
     _reventar(b);
   }
 
-  /// La saltarina salta a otro lugar de la pantalla (lejos de donde está).
-  void _saltar(Burbuja b) {
+  /// Lo que hace cada jefe cuando lo tocas (y todavía no revienta).
+  void _haceLoSuyo(Burbuja b, TipoJefe jefe) {
+    switch (jefe) {
+      case TipoJefe.rey:
+        // Sale corriendo para otro lado.
+        b.rumbo += _entre(-1.2, 1.2);
+        b.apuradoHasta = _ahora + 1.2;
+      case TipoJefe.saltarina:
+        _saltar(b);
+        b.proximoSaltito = _ahora + _entre(2.2, 3.4);
+      case TipoJefe.dormilona:
+        b.despiertaHasta = _ahora + 2.5;
+      case TipoJefe.pinata:
+        // Se hamaca fuerte.
+        b.apuradoHasta = _ahora + 0.8;
+      case TipoJefe.fantasma:
+        // "¡Buu!": se esconde y aparece en otro lado.
+        b
+          ..escondeInicio = _ahora
+          ..escondeHasta = _otroLugar(b);
+      case TipoJefe.pulpo:
+        // Sale disparado para el otro lado.
+        b.rumbo += math.pi + _entre(-0.7, 0.7);
+        b.apuradoHasta = _ahora + 1.0;
+      case TipoJefe.dragon:
+        // Estornuda chispitas de colores.
+        _llamaradas.add(
+          Llamarada(
+            b.centro + Offset(0, b.radio * 0.3),
+            _haciaDondeMiraElDragon(b),
+            b.radio * 1.3,
+            _ahora,
+          ),
+        );
+        b.apuradoHasta = _ahora + 0.8;
+      case TipoJefe.pelota:
+        // ¡Un salto altísimo!
+        final tam = _tam;
+        if (tam != null) {
+          final alto = math.max(
+            b.radio,
+            tam.height - b.margenAbajo - b.margenArriba,
+          );
+          final gravedad = 2 * alto * 0.8 / (0.85 * 0.85);
+          b.vy = -math.sqrt(2 * gravedad * alto);
+          b.vx = -b.vx;
+        }
+      case TipoJefe.remolino:
+        // Gira rapidísimo.
+        b.apuradoHasta = _ahora + 1.4;
+    }
+  }
+
+  /// Hacia dónde estornuda el dragón: para el lado al que va, y un poco
+  /// para abajo.
+  Offset _haciaDondeMiraElDragon(Burbuja b) {
+    final lado = math.cos(b.rumbo) >= 0 ? 1.0 : -1.0;
+    return Offset(lado, 0.5) / math.sqrt(1.25);
+  }
+
+  /// Un lugar de la pantalla lejos de donde está [b] (o cerca, si [lejos]
+  /// es false), donde [b] cabe entera.
+  Offset _otroLugar(Burbuja b, {bool lejos = true}) {
     final tam = _tam;
-    if (tam == null) return;
+    if (tam == null) return b.centro;
     final r = b.radio;
     final arriba = b.margenArriba;
+    final abajo = b.margenAbajo;
     final w = tam.width;
     final h = tam.height;
+    Offset dentro(Offset p) => Offset(
+          p.dx.clamp(r, math.max(r, w - r)),
+          p.dy.clamp(arriba, math.max(arriba, h - abajo)),
+        );
     var destino = b.centro;
     for (var intento = 0; intento < 8; intento++) {
-      destino = Offset(
-        _entre(r, math.max(r, w - r)),
-        _entre(arriba, math.max(arriba, h - r)),
-      );
-      if ((destino - b.centro).distance > r * 1.2) break;
+      if (lejos) {
+        destino = dentro(
+          Offset(
+            _entre(r, math.max(r, w - r)),
+            _entre(arriba, math.max(arriba, h - abajo)),
+          ),
+        );
+        if ((destino - b.centro).distance > r * 1.2) break;
+      } else {
+        final a = _azar.nextDouble() * 2 * math.pi;
+        destino = dentro(
+          b.centro + Offset(math.cos(a), math.sin(a)) * r * _entre(0.7, 1.4),
+        );
+        if ((destino - b.centro).distance > r * 0.5) break;
+      }
     }
+    return destino;
+  }
+
+  /// La saltarina salta a otro lugar de la pantalla (lejos de donde está,
+  /// o cerquita si es un saltito).
+  void _saltar(Burbuja b, {bool lejos = true}) {
     b
       ..saltoDesde = b.centro
-      ..saltoHasta = destino
+      ..saltoHasta = _otroLugar(b, lejos: lejos)
       ..saltoInicio = _ahora
       ..adentro = true;
   }
@@ -670,18 +898,21 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         b.tipo == TipoBurbuja.mega ||
         b.tipo == TipoBurbuja.jefe;
 
-    // El sonido: una de las explosiones bonitas (o "¡ay!" si tiene carita y
-    // la lista sonidosAy no está vacía).
+    // El sonido: el del jefe, el de las grandes, o una de las pompas (o
+    // "¡ay!" si tiene carita y la lista sonidosAy no está vacía).
     final ay = AjustesBurbujas.sonidosAy;
-    if (b.conCarita && ay.isNotEmpty) {
+    if (b.tipo == TipoBurbuja.jefe) {
+      Sonidos.tocar(AjustesBurbujas.sonidoJefePop);
+    } else if (grande) {
+      Sonidos.tocar(AjustesBurbujas.sonidoSuperPop);
+    } else if (b.conCarita && ay.isNotEmpty) {
       Sonidos.tocar(ay[_turnoAy++ % ay.length]);
-    } else if (!grande) {
+    } else {
       final sonidos = AjustesBurbujas.sonidosPop;
       if (sonidos.isNotEmpty) {
         Sonidos.tocar(sonidos[_turnoPop++ % sonidos.length]);
       }
     }
-    if (grande) Sonidos.tocar(AjustesBurbujas.sonidoSuperPop);
     if (b.tipo == TipoBurbuja.animalito) {
       Sonidos.tocar(AjustesBurbujas.sonidoAnimalito);
     }
@@ -714,8 +945,11 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         case TipoBurbuja.mega:
           _soltarChicas(b, AjustesBurbujas.hijasMega);
         case TipoBurbuja.jefe:
-          // ¡El jefe explota en muchas burbujitas, y la mascota aplaude!
+          // ¡El jefe explota en muchas burbujitas, con fuegos artificiales,
+          // tiembla todo y la mascota aplaude!
           _soltarChicas(b, AjustesBurbujas.burbujitasAlReventarJefe);
+          _fuegosArtificiales(b);
+          _temblar(12, 0.7);
           final m = _mascota;
           if (m != null) {
             m
@@ -746,13 +980,20 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     final plan = _plan;
     if (tam == null || plan == null || n <= 0) return const <Burbuja>[];
     final lado = tam.shortestSide;
-    final pinata = de.jefe == TipoJefe.pinata;
+    final jefe = de.jefe;
     final hijas = <Burbuja>[];
     final giro = _azar.nextDouble() * 2 * math.pi;
+    final dragon = _haciaDondeMiraElDragon(de);
     for (var i = 0; i < n; i++) {
-      final angulo = pinata
-          ? math.pi / 2 + _entre(-0.9, 0.9)
-          : giro + i * 2 * math.pi / n + _entre(-0.3, 0.3);
+      final angulo = switch (jefe) {
+        // Las de la piñata caen.
+        TipoJefe.pinata => math.pi / 2 + _entre(-0.9, 0.9),
+        // Las del pulpo salen para atrás.
+        TipoJefe.pulpo => de.rumbo + math.pi + _entre(-0.6, 0.6),
+        // Las del dragón salen de su boca.
+        TipoJefe.dragon => math.atan2(dragon.dy, dragon.dx) + _entre(-0.4, 0.4),
+        _ => giro + i * 2 * math.pi / n + _entre(-0.3, 0.3),
+      };
       final direccion = Offset(math.cos(angulo), math.sin(angulo));
       final radio = _radioDe(TipoBurbuja.chica, lado);
       var centro = de.centro + direccion * de.radio * 0.45;
@@ -767,11 +1008,16 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
           tipo: TipoBurbuja.chica,
           centro: centro,
           radio: radio,
-          color: pinata
-              ? coloresDulces[_azar.nextInt(coloresDulces.length)]
-              : _otroColor(),
+          color: switch (jefe) {
+            TipoJefe.pinata =>
+              coloresDulces[_azar.nextInt(coloresDulces.length)],
+            TipoJefe.pelota =>
+              coloresPelota[_azar.nextInt(coloresPelota.length)],
+            _ => _otroColor(),
+          },
           velocidad: plan.velocidad * lado * _rapidezDe(TipoBurbuja.chica),
-          rumbo: angulo,
+          // Las del remolino salen girando (en espiral).
+          rumbo: jefe == TipoJefe.remolino ? angulo + math.pi / 2 : angulo,
           fase: _azar.nextDouble() * 2 * math.pi,
           nace: _ahora,
         )
@@ -781,6 +1027,24 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     }
     _burbujas.addAll(hijas);
     return hijas;
+  }
+
+  /// Fuegos artificiales alrededor del jefe que revienta (uno después del
+  /// otro).
+  void _fuegosArtificiales(Burbuja b) {
+    for (var k = 0; k < 5; k++) {
+      final a = k * 2 * math.pi / 5 + _entre(-0.3, 0.3);
+      _estallidos.add(
+        Estallido(
+          centro: b.centro + Offset(math.cos(a), math.sin(a)) * b.radio * 1.2,
+          radio: b.radioInicial * _entre(0.22, 0.32),
+          color: coloresDulces[k % coloresDulces.length],
+          inicio: _ahora + 0.15 + k * 0.12,
+          grande: true,
+          conPalabra: false,
+        ),
+      );
+    }
   }
 
   void _revisarFin() {
@@ -1044,13 +1308,20 @@ class _PintorJuego extends CustomPainter {
   void paint(Canvas canvas, Size tam) {
     final ahora = juego._ahora;
     final mascota = juego._mascota;
-    if (mascota != null)
+    // Cuando llega o revienta un jefe, todo tiembla.
+    final temblor = juego._temblor();
+    canvas.save();
+    canvas.translate(temblor.dx, temblor.dy);
+    if (mascota != null) {
       pintarMascota(canvas, tam, mascota, ahora, letra: letra);
+    }
     for (final b in juego._burbujas) {
       pintarBurbuja(canvas, b, ahora, letra: letra);
     }
+    pintarLlamaradas(canvas, juego._llamaradas, ahora);
     pintarEstallidos(canvas, juego._estallidos, ahora, letra: letra);
     pintarAnimales(canvas, juego._animales, ahora, letra: letra);
+    canvas.restore();
   }
 
   @override

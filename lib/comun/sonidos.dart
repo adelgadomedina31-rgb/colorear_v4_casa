@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart' show AssetManifest, rootBundle;
 
 import 'package:colorear_ninos/app/ajustes_app.dart';
@@ -35,6 +36,11 @@ class Sonidos {
   static final Map<String, Future<AudioPlayer?>> _reproductores =
       <String, Future<AudioPlayer?>>{};
 
+  /// Para las pruebas: los últimos sonidos que se pidieron (el último al
+  /// final).
+  @visibleForTesting
+  static final List<String> pedidos = <String>[];
+
   /// Los archivos que hay en assets/sonidos/ (sin "assets/sonidos/").
   static Future<Set<String>>? _archivos;
 
@@ -60,6 +66,8 @@ class Sonidos {
   /// 'colores/reventar.wav'). No espera a que termine.
   static void tocar(String archivo, {double? volumen}) {
     if (!AjustesApp.sonidosJuegos && archivo != felicidadesArchivo) return;
+    pedidos.add(archivo);
+    if (pedidos.length > 40) pedidos.removeAt(0);
     unawaited(_tocar(archivo, volumen ?? AjustesApp.volumenJuegos));
   }
 

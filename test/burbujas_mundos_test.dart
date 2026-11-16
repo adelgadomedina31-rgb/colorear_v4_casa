@@ -12,7 +12,7 @@ void main() {
 
   testWidgets(
       'Cada nivel pasa en otro mundo, con su mascota: sopla burbujas, salta '
-      'y se ríe si la tocas, y aplaude al pasar de nivel', (tester) async {
+      'si la tocas, y aplaude al pasar de nivel', (tester) async {
     sinAvisosDeSonido();
     await tester.binding.setSurfaceSize(const Size(420, 860));
     await tester.pumpWidget(
@@ -41,7 +41,7 @@ void main() {
     await avanzar(tester, const Duration(milliseconds: 400));
     expect(soplada.centro.dy, lessThan(y), reason: 'sube');
 
-    // Tocar la mascota: salta y se ríe (no revienta nada).
+    // Tocar la mascota: salta (no revienta nada).
     final m = juego.mascota!;
     final zona = zonaBurbujas(tester);
     final lugar = m.lugar(zona.size);
@@ -55,8 +55,9 @@ void main() {
       expect(juego.reventadas, hechas);
     }
 
-    // Pasa de nivel: la mascota aplaude, y el nivel 2 es en otro mundo (la
-    // voz dice cuál, con el nombre de la mascota).
+    // Pasa de nivel: la mascota aplaude, y el nivel 2 es en otro mundo (si
+    // no hay jefe ni burbuja nueva, la voz dice cuál, con el nombre de la
+    // mascota).
     final mundos = <Mundo>[juego.mundo];
     await reventarTodas(tester);
     await avanzar(tester, const Duration(milliseconds: 600));

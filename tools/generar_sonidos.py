@@ -31,6 +31,16 @@
   - explosion1.wav ... explosion6.wav: burbujas que revientan con
     distintos efectos bonitos (brillitos, campanitas, fuegos artificiales
     chiquitos, magia, agua y confeti).
+  - pompa1.wav ... pompa8.wav: pompas de jabón que revientan, delicadas y
+    alegres ("plip" y una notita de cajita de música, cada una en una nota
+    distinta: al reventar varias seguidas suena como una melodía).
+  - pompa_grande.wav: la súper burbuja o la mega que revientan.
+  - pompa_jefe.wav: un jefe que revienta (bum suave y cascada de notitas).
+  - toque_jefe.wav: un toque al jefe ("¡bwoing!" grave y gelatinoso).
+  - buu.wav: el fantasma ("¡buuu!" de mentiritas).
+  - zumm.wav: un remolino de aire (el remolino y el pulpo).
+  - miau.wav, guau.wav, pio.wav: el gatito, el perrito y el pollito
+    cuando los tocas.
 
   contar/
   - nota1.wav ... nota10.wav: una notita que sube al contar cada cosa
@@ -589,6 +599,236 @@ def explosion_confeti(semilla=606):
     return suavizar_final(normalizar(pista, 0.8), 80)
 
 
+# ---------------------------------------------------------------------------
+#  Pompas delicadas, los jefes y las voces de las mascotas
+# ---------------------------------------------------------------------------
+
+# Más formantes de voz de niño (para el "miau", el "guau" y el "buu").
+VOCAL_U = [(380, 90), (900, 140), (2700, 260)]
+VOCAL_E = [(600, 110), (2300, 180), (3200, 260)]
+
+
+def _formantes_por_tiempo(puntos, vocales):
+    """Una función de formantes que va de una vocal a otra: en el momento
+    puntos[k] suena vocales[k] (y entre medio se mezclan suavecito)."""
+    def formantes(tt):
+        salida = []
+        for i in range(3):
+            centro = np.interp(tt, puntos, [v[i][0] for v in vocales])
+            ancho = np.interp(tt, puntos, [v[i][1] for v in vocales])
+            salida.append((centro, ancho))
+        return salida
+    return formantes
+
+
+def celesta(frec, dur, vol=1.0):
+    """Una notita de cajita de música: suave, redonda y que se apaga
+    despacito (casi sin armónicos, para que sea delicada)."""
+    t = tiempo(dur)
+    env = (1 - np.exp(-t / 0.004)) * np.exp(-t / 0.28)
+    env *= np.clip((dur - t) / min(0.08, dur / 2), 0, 1)  # sin cortes al final
+    s = (np.sin(2 * np.pi * frec * t)
+         + 0.22 * np.sin(2 * np.pi * 2 * frec * t) * np.exp(-t / 0.12)
+         + 0.05 * np.sin(2 * np.pi * 3 * frec * t) * np.exp(-t / 0.05))
+    return vol * s * env
+
+
+def _plip(frec, dur=0.12, caida=0.028, vol=0.75):
+    """El "plip" de una pompa de jabón: un tono redondo que sube de golpe
+    (como una gotita) y se apaga enseguida."""
+    t = tiempo(dur)
+    f = frec * (0.6 + 0.8 * (1 - np.exp(-t / 0.012)))
+    fase = 2 * np.pi * np.cumsum(f) / FS
+    env = (1 - np.exp(-t / 0.0015)) * np.exp(-t / caida)
+    return normalizar((np.sin(fase) + 0.08 * np.sin(2 * fase)) * env, vol)
+
+
+def pompa(frec, semilla):
+    """Una pompa de jabón que revienta, delicada y alegre: un tic finito,
+    un "plip" redondo y una notita de cajita de música [frec] con dos
+    brillitos. Cada pompa en una nota distinta: al reventar varias seguidas
+    suena como una melodía."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 0.6))
+    poner(pista, 0, _clic(azar, 0.02, 0.10, 4000, 12000, 0.0015))
+    poner(pista, 0.002, _plip(frec / 2))
+    poner(pista, 0.018, celesta(frec, 0.55, 0.42))
+    poner(pista, 0.06, celesta(frec * 2, 0.25, 0.07))
+    poner(pista, 0.10, celesta(frec * 1.5, 0.2, 0.05))
+    return suavizar_final(normalizar(pista, 0.7), 60)
+
+
+def pompa_grande(semilla=721):
+    """La súper burbuja o la mega que revientan: un "plop" redondo y
+    grande, un bum suavecito y cuatro notitas que suben."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 1.0))
+    poner(pista, 0, _clic(azar, 0.03, 0.15, 3000, 11000, 0.002))
+    t = tiempo(0.3)
+    poner(pista, 0, normalizar(np.sin(2 * np.pi * 140 * t) * np.exp(-t / 0.05), 0.3))
+    poner(pista, 0.002, _plip(nota("C5"), 0.22, 0.05, 0.8))
+    for i, n in enumerate(("C6", "E6", "G6", "C7")):
+        poner(pista, 0.03 + i * 0.06, celesta(nota(n), 0.6, 0.3))
+    for _ in range(6):
+        poner(pista, azar.uniform(0.25, 0.7), celesta(azar.uniform(2500, 4500), 0.25, 0.04))
+    return suavizar_final(normalizar(pista, 0.75), 80)
+
+
+def pompa_jefe(semilla=731):
+    """¡El jefe revienta! Un BUM grande pero suave, un plop gigante, una
+    cascada de notitas que sube hasta arriba y un acorde de cajita de
+    música con brillitos."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 1.7))
+    t = tiempo(0.6)
+    bum = (np.sin(2 * np.pi * 90 * t) + 0.3 * np.sin(2 * np.pi * 180 * t)) * np.exp(-t / 0.12)
+    poner(pista, 0, normalizar(bum * (1 - np.exp(-t / 0.003)), 0.55))
+    aire = filtrar(azar.standard_normal(len(t)), 200, 3000) * np.exp(-t / 0.04)
+    poner(pista, 0, normalizar(aire, 0.25))
+    poner(pista, 0.004, _plip(nota("G4"), 0.3, 0.07, 0.7))
+    escala = ["C5", "D5", "E5", "G5", "A5", "C6", "D6", "E6", "G6", "A6", "C7"]
+    for i, n in enumerate(escala):
+        poner(pista, 0.05 + i * 0.045, celesta(nota(n), 0.5, 0.25))
+    for n in ("C6", "E6", "G6", "C7"):
+        poner(pista, 0.6, celesta(nota(n), 0.9, 0.18))
+    for _ in range(14):
+        poner(pista, azar.uniform(0.4, 1.3), celesta(azar.uniform(2600, 5000), 0.3, 0.04))
+    return suavizar_final(normalizar(pista, 0.8), 200)
+
+
+def toque_jefe():
+    """Un toque al jefe: "¡bwoing!" grave y gelatinoso (se nota que es
+    grande y fuerte, pero da risa)."""
+    dur = 0.5
+    t = tiempo(dur)
+    f = 120 + 200 * np.exp(-t / 0.05)
+    f = f * (1 + 0.15 * np.sin(2 * np.pi * 11 * t) * np.exp(-t / 0.2))
+    fase = 2 * np.pi * np.cumsum(f) / FS
+    env = (1 - np.exp(-t / 0.003)) * np.exp(-t / 0.13)
+    s = (np.sin(fase) + 0.35 * np.sin(2 * fase) + 0.12 * np.sin(3 * fase)) * env
+    pista = normalizar(s, 0.8)
+    golpe = np.sin(2 * np.pi * 70 * t) * np.exp(-t / 0.06)
+    pista += normalizar(golpe, 0.45)
+    poner(pista, 0.01, celesta(nota("G5"), 0.3, 0.12))
+    return suavizar_final(normalizar(pista, 0.7), 40)
+
+
+def buu(semilla=741):
+    """El fantasma: "¡buuu!" de mentiritas, con voz que tiembla."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.75
+    t = tiempo(dur)
+    altura = np.interp(t, [0, 0.12, 0.5, 0.75], [300, 390, 350, 250])
+    altura *= 1 + 0.04 * np.sin(2 * np.pi * 5 * t) * np.minimum(1, t / 0.2)
+    formantes = _formantes_por_tiempo([0, 0.04, 0.75], [VOCAL_U, VOCAL_U, VOCAL_U])
+    vocal = voz(altura, formantes, dur)
+    vocal *= np.minimum(1, t / 0.03) * np.clip((dur - t) / 0.3, 0, 1)
+    pista = normalizar(vocal, 0.8)
+    tb = tiempo(0.06)
+    bee = filtrar(azar.standard_normal(len(tb)), 150, 1200) * np.exp(-tb / 0.01)
+    poner(pista, 0, normalizar(bee, 0.2))
+    return suavizar_final(normalizar(pista, 0.6), 60)
+
+
+def zumm(semilla=751):
+    """Un remolino de aire: "fiuuu" que sube y baja (el remolino y el
+    pulpo cuando salen disparados)."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.55
+    t = tiempo(dur)
+    ruido = azar.standard_normal(len(t))
+    bandas = [(500, 900), (1000, 1800), (2000, 3600)]
+    # Cuánto suena cada banda en cada momento: sube hacia lo agudo y vuelve.
+    pesos = [np.interp(t, [0, 0.15, 0.3, 0.55], p)
+             for p in ([1, 0.3, 0.2, 0.8], [0.4, 1, 0.6, 0.4], [0.1, 0.6, 1, 0.2])]
+    s = np.zeros(len(t))
+    for (bajo, alto), peso in zip(bandas, pesos):
+        s += normalizar(filtrar(ruido, bajo, alto), 1) * peso
+    s *= np.minimum(1, t / 0.06) * np.clip((dur - t) / 0.25, 0, 1)
+    return suavizar_final(normalizar(s, 0.45), 40)
+
+
+def miau(semilla=801):
+    """Un gatito chiquito que dice "miau", suave y delicado: empieza con la
+    boca cerradita ("m"), se abre ("ia") y se cierra al final ("u")."""
+    azar = np.random.default_rng(semilla)
+    dur = 0.62
+    t = tiempo(dur)
+    altura = np.interp(t, [0, 0.12, 0.3, 0.62], [560, 720, 680, 470])
+    altura *= 1 + 0.015 * np.sin(2 * np.pi * 6 * t) * np.minimum(1, t / 0.2)
+    formantes = _formantes_por_tiempo(
+        [0, 0.07, 0.17, 0.36, 0.6],
+        [VOCAL_U, VOCAL_I, VOCAL_A, VOCAL_A, VOCAL_U])
+    vocal = voz(altura, formantes, dur, armonicos=20)
+    # La "m": al principio suena apagadito (con la boca cerrada).
+    apagado = filtrar(vocal, None, 900)
+    mezcla = np.clip((t - 0.03) / 0.06, 0, 1)
+    vocal = apagado * (1 - mezcla) + vocal * mezcla
+    env = np.clip(t / 0.09, 0, 1) ** 1.5 * np.clip((dur - t) / 0.2, 0, 1) ** 1.2
+    vocal = normalizar(vocal * env, 1)
+    aire = filtrar(azar.standard_normal(len(t)), 1500, 6000) * env
+    vocal += 0.05 * normalizar(aire, 1)
+    return suavizar_final(normalizar(vocal, 0.55), 40)
+
+
+def guau(semilla=811):
+    """Un perrito alegre que dice "¡guau, guau!" (agudito, no asusta)."""
+    azar = np.random.default_rng(semilla)
+    pista = np.zeros(int(FS * 0.75))
+    for inicio, f0 in ((0.0, 470), (0.3, 430)):
+        dv = 0.24
+        tv = tiempo(dv)
+        altura = f0 * np.interp(tv, [0, 0.05, 0.12, 0.24], [0.8, 1.15, 1.0, 0.7])
+        formantes = _formantes_por_tiempo(
+            [0, 0.05, 0.12, 0.24], [VOCAL_U, VOCAL_A, VOCAL_A, VOCAL_U])
+        vocal = voz(altura, formantes, dv)
+        # Un poquito "rasposo", como un ladrido.
+        fase = np.pi * np.cumsum(altura) / FS
+        vocal *= 1 + 0.2 * np.sin(fase)
+        vocal *= np.minimum(1, tv / 0.008) * np.clip((dv - tv) / 0.12, 0, 1)
+        poner(pista, inicio + 0.01, normalizar(vocal, 0.8))
+        # La "g": un golpecito de aire al empezar.
+        tg = tiempo(0.025)
+        ge = filtrar(azar.standard_normal(len(tg)), 300, 2500) * np.exp(-tg / 0.006)
+        poner(pista, inicio, normalizar(ge, 0.25))
+    return suavizar_final(normalizar(pista, 0.7), 40)
+
+
+def pio(semilla=821):
+    """Un pollito: "¡pío, pío!" (dos piídos agudos y suavecitos, que suben
+    un poquito y bajan)."""
+    pista = np.zeros(int(FS * 0.5))
+    for inicio, escala in ((0.0, 1.0), (0.2, 0.94)):
+        dv = 0.13
+        tv = tiempo(dv)
+        f = escala * np.interp(tv, [0, 0.02, 0.13], [3100, 4100, 2700])
+        fase = 2 * np.pi * np.cumsum(f) / FS
+        s = np.sin(fase) + 0.12 * np.sin(2 * fase)
+        s *= np.clip(tv / 0.008, 0, 1) * np.clip((dv - tv) / 0.07, 0, 1) ** 1.3
+        poner(pista, inicio, s * 0.6)
+    pista = filtrar(pista, None, 6000)
+    return suavizar_final(normalizar(pista, 0.45), 30)
+
+
+# Las notas de las pompas (escala pentatónica, suena bien en cualquier orden).
+NOTAS_POMPAS = ["G5", "A5", "C6", "D6", "E6", "G6", "A6", "C7"]
+
+
+def guardar_pompas_y_mascotas(guardar_en):
+    """Las pompas delicadas, los sonidos de los jefes y las voces de las
+    mascotas."""
+    for i, n in enumerate(NOTAS_POMPAS):
+        guardar_en("burbujas", f"pompa{i + 1}.wav", pompa(nota(n), 700 + i))
+    guardar_en("burbujas", "pompa_grande.wav", pompa_grande())
+    guardar_en("burbujas", "pompa_jefe.wav", pompa_jefe())
+    guardar_en("burbujas", "toque_jefe.wav", toque_jefe())
+    guardar_en("burbujas", "buu.wav", buu())
+    guardar_en("burbujas", "zumm.wav", zumm())
+    guardar_en("burbujas", "miau.wav", miau())
+    guardar_en("burbujas", "guau.wav", guau())
+    guardar_en("burbujas", "pio.wav", pio())
+
+
 def guardar_explosiones(guardar_en):
     for i, f in enumerate((explosion_brillante, explosion_campanitas,
                            explosion_fuegos, explosion_magia, explosion_agua,
@@ -639,6 +879,7 @@ def main():
     guardar_en("burbujas", "super_pop.wav", super_pop())
     guardar_burbujas_nuevos(guardar_en)
     guardar_explosiones(guardar_en)
+    guardar_pompas_y_mascotas(guardar_en)
     for i, n in enumerate(["C5", "D5", "E5", "G5", "A5", "C6", "D6", "E6", "G6", "A6"]):
         guardar_en("contar", f"nota{i + 1}.wav", campanita(nota(n), 0.6, 0.8) * np.linspace(1, 0.9, int(FS * 0.6)))
     for grupo in sorted(os.listdir(carpeta)):

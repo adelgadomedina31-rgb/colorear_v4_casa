@@ -10,8 +10,8 @@
 //  burbujas, más rápidas y que giran más, y cada pocos niveles aparece un
 //  tipo de burbuja nuevo (súper, animalito, mega, rápidas). De vez en
 //  cuando, al azar, sale un nivel más tranquilo, para que sienta que mejora
-//  sin frustrarse, y otras veces un nivel de JEFE (una burbuja gigante).
-//  El juego recuerda en qué nivel va.
+//  sin frustrarse. En TODOS los niveles llega un JEFE (una burbuja
+//  gigante, cada vez uno distinto). El juego recuerda en qué nivel va.
 //
 //  Cada nivel pasa en un MUNDO distinto (cielo, mar, atardecer, noche o
 //  espacio), con una MASCOTA abajo que sopla burbujas y aplaude. Las
@@ -55,8 +55,9 @@ class AjustesBurbujas {
   static const double girosMaximo = 2.4;
 
   /// Nunca más de esta cantidad de burbujas para reventar en un nivel
-  /// (contando todas, también las que salen de las mega burbujas).
-  static const int totalMaximo = 24;
+  /// (contando todas: el jefe, las burbujitas que suelta y las que salen
+  /// de las mega burbujas).
+  static const int totalMaximo = 32;
 
   // ---------------------------------------------- niveles más tranquilos
 
@@ -108,41 +109,60 @@ class AjustesBurbujas {
   static const int rapidaMaximo = 6;
   static const double velocidadRapidas = 2.2;
 
-  // ------------------------------------------------- niveles de jefe
+  // ------------------------------------------------- los jefes
   //
-  // De vez en cuando sale un nivel de JEFE: una burbuja gigante que hay que
-  // tocar muchas veces. Con cada toque se achica, se ríe y suelta
-  // burbujitas; al final explota en muchas burbujitas más. Vienen unas
-  // pocas burbujas normales con él.
+  // En cada nivel llega un JEFE: una burbuja gigante que hay que tocar
+  // muchas veces. Baja desde arriba con música y hace temblar la pantalla.
+  // Con cada toque se achica, se ríe, suelta burbujitas y hace lo suyo
+  // (salta, se esconde, sale disparado...); al final explota en muchas
+  // burbujitas más, con fuegos artificiales. Con él vienen las burbujas de
+  // siempre de ese nivel.
 
   /// Desde qué nivel salen jefes (0 = nunca). En ese nivel sale siempre el
   /// primero de la lista [jefes].
-  static const int jefeDesdeNivel = 4;
+  static const int jefeDesdeNivel = 1;
 
-  /// Qué tan seguido: 0.25 = más o menos 1 de cada 4 niveles. Nunca hay
-  /// dos niveles de jefe seguidos, y si pasan [nivelesSinJefeMaximo]
-  /// niveles sin jefe, el siguiente lo tiene seguro.
-  static const double probabilidadJefe = 0.25;
+  /// Qué tan seguido: 1.0 = en TODOS los niveles; 0.25 = más o menos 1 de
+  /// cada 4. Si pasan [nivelesSinJefeMaximo] niveles sin jefe, el siguiente
+  /// lo tiene seguro.
+  static const double probabilidadJefe = 1.0;
   static const int nivelesSinJefeMaximo = 6;
 
-  /// Los jefes (borra uno de la lista para que no salga):
-  ///  - 'rey': el REY BURBUJA, con corona. Se achica con cada toque.
-  ///  - 'saltarina': con orejas de conejo; con cada toque salta a otro lado.
+  /// Los jefes (borra uno de la lista para que no salga). Nunca sale el
+  /// mismo que hace poco.
+  ///  - 'rey': el REY BURBUJA, con corona. Con cada toque sale corriendo.
+  ///  - 'saltarina': con orejas de conejo; da saltitos, y con cada toque
+  ///    salta lejos.
   ///  - 'dormilona': con gorro de dormir; duerme (va lentito) y al tocarla
   ///    se despierta riéndose y corre un ratito.
-  ///  - 'pinata': una piñata de colores; con cada toque se sacude y le caen
-  ///    burbujitas de dulce.
+  ///  - 'pinata': una piñata de colores que se hamaca; con cada toque le
+  ///    caen burbujitas de dulce.
+  ///  - 'fantasma': flota en zigzag; con cada toque dice "¡buu!", se
+  ///    esconde y aparece en otro lado.
+  ///  - 'pulpo': con tentáculos; nada a empujoncitos y con cada toque sale
+  ///    disparado soltando burbujitas para atrás.
+  ///  - 'dragon': un dragoncito con alas; vuela haciendo olas y con cada
+  ///    toque estornuda chispitas de colores.
+  ///  - 'pelota': una pelota de playa que rebota y rebota en el piso; con
+  ///    cada toque pega un salto altísimo.
+  ///  - 'remolino': da vueltas y vueltas; con cada toque gira rapidísimo y
+  ///    tira burbujitas en espiral.
   static const List<String> jefes = <String>[
     'rey',
     'saltarina',
     'dormilona',
     'pinata',
+    'fantasma',
+    'pulpo',
+    'dragon',
+    'pelota',
+    'remolino',
   ];
 
   /// Cuántos toques necesita el jefe: al empezar, uno más cada
   /// [nivelesParaUnToqueMas] niveles, y el máximo.
-  static const int toquesJefeAlEmpezar = 6;
-  static const int nivelesParaUnToqueMas = 6;
+  static const int toquesJefeAlEmpezar = 5;
+  static const int nivelesParaUnToqueMas = 4;
   static const int toquesJefeMaximo = 9;
 
   /// Cuántas burbujitas suelta el jefe con cada toque, y cuántas al
@@ -150,13 +170,19 @@ class AjustesBurbujas {
   static const int burbujitasPorToqueJefe = 1;
   static const int burbujitasAlReventarJefe = 6;
 
-  /// Cuántas burbujas normales vienen con el jefe.
-  static const int normalesConJefe = 3;
+  /// El tamaño del jefe al llegar (parte del ancho de la pantalla: 0.75 =
+  /// tres cuartos), y qué tan chiquito queda al final (0.4 = casi la
+  /// mitad).
+  static const double tamanoJefe = 0.75;
+  static const double jefeAchicaHasta = 0.4;
 
-  /// El tamaño del jefe al llegar (parte del ancho de la pantalla), y qué
-  /// tan chiquito queda al final (0.45 = casi la mitad).
-  static const double tamanoJefe = 0.6;
-  static const double jefeAchicaHasta = 0.45;
+  /// Qué tan rápido va el jefe (comparado con las burbujas normales: 0.5 =
+  /// a la mitad). Cada jefe se mueve a su manera.
+  static const double rapidezJefe = 0.55;
+
+  /// true = la pantalla tiembla cuando llega un jefe, cuando lo tocas y
+  /// cuando revienta.
+  static const bool temblorConJefes = true;
 
   // ------------------------------------------------------------ mundos
   //
@@ -186,9 +212,9 @@ class AjustesBurbujas {
   // ---------------------------------------------------------- mascotas
   //
   // Abajo, en cada mundo, hay una mascota (elegida al azar entre las de ese
-  // mundo) que camina y corre de un lado a otro, sopla burbujas, se ríe si
-  // la tocas y aplaude al pasar de nivel. En el espacio, el perrito lleva
-  // casco de astronauta.
+  // mundo) que camina y corre de un lado a otro, sopla burbujas, salta y
+  // habla si la tocas ("miau", "guau", "pío") y aplaude al pasar de nivel.
+  // En el espacio, el perrito lleva casco de astronauta.
 
   static const Map<String, List<String>> mascotas = <String, List<String>>{
     'cielo': <String>['🐥', '🐶'],
@@ -320,12 +346,18 @@ class AjustesBurbujas {
   static const String vozMega = '¡Mega burbujas! ¡Tienen burbujitas adentro!';
   static const String vozRapida = '¡Burbujitas rápidas! ¡Atrápalas!';
 
-  /// Cuando llega un jefe.
+  /// Cuando llega un jefe (si el nivel trae una burbuja nueva, la voz
+  /// presenta la burbuja nueva en vez del jefe).
   static const Map<String, String> vozJefes = <String, String>{
     'rey': '¡Llegó el Rey Burbuja! ¡Tócalo muchas veces!',
     'saltarina': '¡La Burbuja Saltarina! ¡Atrápala!',
     'dormilona': '¡La Burbuja Dormilona! ¡Despiértala!',
     'pinata': '¡La Burbuja Piñata! ¡Tiene burbujitas de dulce!',
+    'fantasma': '¡Uuuh, la Burbuja Fantasma! ¡Atrápala!',
+    'pulpo': '¡El Pulpo Burbuja! ¡Tócalo muchas veces!',
+    'dragon': '¡Llegó el Dragón Burbuja! ¡Tócalo!',
+    'pelota': '¡La Burbuja Pelota! ¡Rebota y rebota!',
+    'remolino': '¡El Remolino Burbuja! ¡Da vueltas y vueltas!',
   };
 
   /// Al empezar cada nivel, después del número, dice a qué mundo van
@@ -361,27 +393,51 @@ class AjustesBurbujas {
   // Están en assets/sonidos/. Para cambiarlos, pon otro archivo con el
   // mismo nombre (o cambia aquí el nombre).
 
-  /// Al reventar una burbuja suena una de estas explosiones bonitas (van
-  /// turnándose, así cada una suena distinta a la anterior):
-  ///   explosion1 = brillitos       explosion4 = arpa mágica que sube
-  ///   explosion2 = campanitas      explosion5 = gotitas de agua
-  ///   explosion3 = fuegos de color explosion6 = confeti
-  /// Puedes borrar las que no te gusten o volver a poner los pop de antes
-  /// ('burbujas/pop1.wav' ... 'burbujas/pop4.wav').
+  /// Al reventar una burbuja suena una de estas pompas: un "plip" delicado
+  /// y una notita de cajita de música. Van turnándose, subiendo y bajando,
+  /// así al reventar varias seguidas suena como una melodía.
+  /// Si prefieres las explosiones de antes, escribe 'burbujas/explosion1.wav'
+  /// ... 'burbujas/explosion6.wav' (brillitos, campanitas, fuegos, arpa,
+  /// gotitas y confeti), o los pop de más antes ('burbujas/pop1.wav' ...
+  /// 'burbujas/pop4.wav').
   static const List<String> sonidosPop = <String>[
-    'burbujas/explosion1.wav',
-    'burbujas/explosion2.wav',
-    'burbujas/explosion3.wav',
-    'burbujas/explosion4.wav',
-    'burbujas/explosion5.wav',
-    'burbujas/explosion6.wav',
+    'burbujas/pompa1.wav',
+    'burbujas/pompa2.wav',
+    'burbujas/pompa3.wav',
+    'burbujas/pompa4.wav',
+    'burbujas/pompa5.wav',
+    'burbujas/pompa6.wav',
+    'burbujas/pompa7.wav',
+    'burbujas/pompa8.wav',
+    'burbujas/pompa7.wav',
+    'burbujas/pompa6.wav',
+    'burbujas/pompa5.wav',
+    'burbujas/pompa4.wav',
+    'burbujas/pompa3.wav',
+    'burbujas/pompa2.wav',
   ];
 
   /// Cada toque a una súper burbuja o a una mega (antes de reventar).
   static const String sonidoSuperToque = 'burbujas/super_toque.wav';
 
-  /// La súper burbuja, la mega o un jefe que revientan.
-  static const String sonidoSuperPop = 'burbujas/super_pop.wav';
+  /// La súper burbuja o la mega que revientan (antes era
+  /// 'burbujas/super_pop.wav').
+  static const String sonidoSuperPop = 'burbujas/pompa_grande.wav';
+
+  /// Cada toque a un jefe ("¡bwoing!" grave), y el jefe que revienta (bum
+  /// suave y cascada de notitas).
+  static const String sonidoToqueJefe = 'burbujas/toque_jefe.wav';
+  static const String sonidoJefePop = 'burbujas/pompa_jefe.wav';
+
+  /// Lo que suena además cuando tocas a algunos jefes.
+  static const Map<String, String> sonidosJefes = <String, String>{
+    'saltarina': 'comunes/boing.wav',
+    'fantasma': 'burbujas/buu.wav',
+    'pulpo': 'burbujas/zumm.wav',
+    'dragon': 'burbujas/explosion3.wav',
+    'pelota': 'comunes/boing.wav',
+    'remolino': 'burbujas/zumm.wav',
+  };
 
   /// El animalito que sale volando.
   static const String sonidoAnimalito = 'comunes/acierto.wav';
@@ -392,8 +448,18 @@ class AjustesBurbujas {
   /// 'burbujas/ay3.wav', 'burbujas/ay4.wav'.
   static const List<String> sonidosAy = <String>[];
 
-  /// La risita ("¡jiji!") de las burbujas y de la mascota.
+  /// La risita ("¡jiji!") de las burbujas (y de la mascota que no esté en
+  /// [sonidosMascotas]).
   static const String sonidoRisa = 'burbujas/jiji.wav';
+
+  /// Lo que dice cada mascota cuando la tocas: el gatito "miau" (suave y
+  /// delicado), el perrito "guau" y el pollito "pío". Las que no están
+  /// aquí (el pececito) se ríen con [sonidoRisa].
+  static const Map<String, String> sonidosMascotas = <String, String>{
+    '🐱': 'burbujas/miau.wav',
+    '🐶': 'burbujas/guau.wav',
+    '🐥': 'burbujas/pio.wav',
+  };
 
   /// La mascota que sopla una burbuja (suavecito).
   static const String sonidoSoplo = 'burbujas/soplo.wav';
@@ -403,7 +469,4 @@ class AjustesBurbujas {
 
   /// La música cuando llega un jefe.
   static const String sonidoJefe = 'burbujas/jefe.wav';
-
-  /// La Burbuja Saltarina cuando salta.
-  static const String sonidoSalto = 'comunes/boing.wav';
 }

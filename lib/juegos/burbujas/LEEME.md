@@ -14,14 +14,17 @@ Motricidad fina y puntería: hay que **reventar todas las burbujas** que flotan 
    dirección de a poquito y **rebotando** en los bordes y entre ellas.
 4. Las burbujas tienen **carita**: miran hacia donde van, **parpadean**, y **se ríen** cuando revienta una que está
    al lado o cuando las tocas sin reventarlas (súper, mega y jefes).
-5. **Un toque y revientan** con una **explosión bonita** (brillitos, campanitas, fuegos de color, arpa mágica, gotitas
-   o confeti, van turnándose): la carita pone ojitos "> <", sale un destello, gotitas, papelitos, estrellitas y la
-   palabra **"¡POP!"**. Cada burbuja reventada da una **estrella**.
+5. **Un toque y revientan** con un **"plip" delicado y una notita de cajita de música** (cada una en una nota
+   distinta, subiendo y bajando: al reventar varias seguidas suena como una melodía): la carita pone ojitos "> <",
+   sale un destello, gotitas, papelitos, estrellitas y la palabra **"¡POP!"**. Cada burbuja reventada da una
+   **estrella**.
 6. Arriba se ve cuántas lleva y cuántas faltan (una burbujita por cada burbuja del nivel; si son muchas, una barra).
 7. Cuando revienta **todas**: la **mascota aplaude** 👏, un **festejo corto** (fuegos artificiales de burbujas,
    "¡MUY BIEN!") y el nivel siguiente empieza enseguida. **Cada 5 niveles**, la **celebración grande**
    "¡MUY BIEN! REVENTASTE TODAS".
-8. Si toca a la **mascota** (donde no hay burbujas), **salta y se ríe**.
+8. Si toca a la **mascota** (donde no hay burbujas), **salta y habla**: el gatito dice **"miau"** (suave y
+   delicado), el perrito **"guau"** y el pollito **"pío"** (el pececito se ríe).
+9. En **cada nivel** llega un **jefe** gigante (ver más abajo).
 
 ## Los mundos y sus mascotas
 
@@ -65,8 +68,8 @@ Cada nivel tiene un poquito más de burbujas, que van un poco más rápido y cam
 - **Niveles tranquilos al azar:** más o menos 3 de cada 10 niveles son como uno de 1 a 3 niveles antes. Así la
   dificultad sube "en escalera": siente que mejora, sin frustrarse.
 - **Una sorpresa en cada nivel:** un tipo de burbuja (al azar) viene con más, para que ningún nivel sea igual.
-- Nunca hay más de **24** burbujas para reventar en un nivel. Cuando ya se llega a ese número, los niveles
-  siguientes cambian burbujas normales por especiales.
+- Nunca hay más de **32** burbujas para reventar en un nivel (contando al jefe y sus burbujitas). Cuando ya se
+  llega a ese número, los niveles siguientes cambian burbujas normales por especiales.
 
 | Desde el nivel | Burbuja nueva | Cómo es |
 |---|---|---|
@@ -76,20 +79,28 @@ Cada nivel tiene un poquito más de burbujas, que van un poco más rápido y cam
 | 7 | 🟣 **Mega burbuja** | Enorme, con burbujitas que le dan vueltas. Con **2 toques explota** y salen **4 burbujitas** que también hay que reventar |
 | 9 | ⚡ **Burbujitas rápidas** | Chiquitas, brillantes y muy rápidas, con una estela. Se atrapan aunque el dedo no caiga justo encima |
 
-## Los niveles de jefe 👑
+## Los jefes 👑
 
-Desde el **nivel 4** (y después más o menos **1 de cada 4 niveles**, nunca dos seguidos) llega un **jefe**: una
-burbuja **gigante** que hay que tocar **muchas veces** (6 al principio, y más en los niveles altos, hasta 9). Con
-cada toque **se achica, se ríe y suelta una burbujita**; con el último **explota en 6 burbujitas** y la mascota
-aplaude. Vienen 3 burbujas normales con él. Todas las burbujitas también hay que reventarlas. Cuando llega, suena
-una fanfarria y la voz lo presenta.
+En **todos los niveles** llega un **jefe**: una burbuja **gigante** (tres cuartos del ancho de la pantalla), con
+**rayos de luz** que giran alrededor. Baja desde arriba con una **fanfarria**, y al llegar **hace temblar la
+pantalla**. Hay que tocarlo **muchas veces** (5 al principio, y uno más cada 4 niveles, hasta 9). Con cada toque
+hace un **"¡bwoing!"**, **se achica, se ríe, suelta una burbujita** y hace lo suyo (ver la tabla); con el último
+**explota en 6 burbujitas, con fuegos artificiales**, tiembla todo y la mascota aplaude. Con él vienen las burbujas
+de siempre de ese nivel. Todas las burbujitas también hay que reventarlas. La voz lo presenta (si en ese nivel
+aparece una burbuja nueva, presenta la burbuja nueva). El primero es el Rey Burbuja (nivel 1); después sale cada
+vez uno distinto, al azar, y nunca uno de los últimos 4 que salieron.
 
 | Jefe | Cómo es |
 |---|---|
-| 👑 **Rey Burbuja** | Dorado, con corona. Es el primero (nivel 4). Se va achicando con cada toque |
-| 🐰 **Burbuja Saltarina** | Rosada, con orejas de conejo. Con cada toque **salta a otro lado** de la pantalla |
+| 👑 **Rey Burbuja** | Dorado, con corona. Con cada toque **sale corriendo** para otro lado |
+| 🐰 **Burbuja Saltarina** | Rosada, con orejas de conejo. Da **saltitos sola**, y con cada toque **salta lejos** |
 | 😴 **Burbuja Dormilona** | Con gorro de dormir y "Zzz". Duerme y va lentito; al tocarla **se despierta riéndose y corre** un ratito, y se vuelve a dormir |
-| 🪅 **Burbuja Piñata** | De rayas de colores. Con cada toque **le caen burbujitas de dulce** |
+| 🪅 **Burbuja Piñata** | De rayas de colores, colgada de una cuerda: **se hamaca**. Con cada toque **le caen burbujitas de dulce** |
+| 👻 **Burbuja Fantasma** (nueva) | Lila, medio transparente, con sábana. Flota **en zigzag**; con cada toque dice **"¡buu!"**, **desaparece y aparece en otro lado** (mientras no se ve, no se puede tocar) |
+| 🐙 **Pulpo Burbuja** (nuevo) | Morado, con seis tentáculos que se mueven. Nada **a empujoncitos**; con cada toque **sale disparado** para el otro lado soltando burbujitas para atrás |
+| 🐉 **Dragón Burbuja** (nuevo) | Verde, con cuernitos, alas que aletean y colita. Vuela **haciendo olas**; con cada toque **estornuda chispitas de colores** y le salen burbujitas de la boca |
+| 🏐 **Burbuja Pelota** (nueva) | Una pelota de playa de colores. **Rebota y rebota** en el piso, rodando; con cada toque **pega un salto altísimo** |
+| 🌀 **Remolino Burbuja** (nuevo) | Celeste, con una espiral y viento alrededor. **Da vueltas y vueltas**; con cada toque **gira rapidísimo** y tira burbujitas en espiral |
 
 Arriba: la **casita** vuelve al menú, en el medio están las **estrellas** ganadas y la **orejita** repite qué hacer.
 
@@ -104,7 +115,7 @@ tiene el botón **"Volver al nivel 1"**.
 | `niveles.dart` | Arma cada nivel con los números de los ajustes (cuántas de cada tipo, velocidad, niveles tranquilos, sorpresa, jefes) |
 | `burbujas_juego.dart` | El juego, en cuatro partes: **1. cada nivel** (mundo y mascota), **2. salen y flotan** (cómo se mueven), **3. cuando toca** (revientan, jefes, mega, la mascota) y **4. cómo se ve** |
 | `burbuja.dart` | Cómo se dibuja cada burbuja, las explosiones, los animalitos que salen volando y el dibujo de la tarjeta del menú |
-| `carita.dart` | Las caritas (contenta, riéndose, dormida, "¡ay!") y lo que lleva cada jefe (corona, orejas, gorro, rayas de piñata) |
+| `carita.dart` | Las caritas (contenta, riéndose, dormida, "¡ay!") y lo que lleva cada jefe (corona, orejas, gorro, rayas de piñata, sábana, tentáculos, alas y cuernitos, gajos de pelota, espiral y los rayos de luz) |
 | `mundos.dart` | Los cinco mundos (el fondo que se mueve) y cómo cambia de uno a otro |
 | `mascota.dart` | La mascota: cómo camina y corre de un lado a otro, respira, sopla, salta, aplaude, y el casco de astronauta |
 | `animaciones.dart` | Carga una sola vez las animaciones Lottie (mascotas y fondo del mar) |
@@ -129,12 +140,13 @@ tiene el botón **"Volver al nivel 1"**.
 | Qué tan rápidas son las rápidas | `velocidadRapidas` (2.2 = el doble y un poco más) |
 | Qué animalitos salen | `animalitos` |
 | Desde qué nivel salen jefes, o que no salgan | `jefeDesdeNivel` (0 = nunca) |
-| Que salgan jefes más o menos seguido | `probabilidadJefe` (0.25 = 1 de cada 4) y `nivelesSinJefeMaximo` |
+| Que salgan jefes en todos los niveles o de vez en cuando | `probabilidadJefe` (1.0 = en todos; 0.25 = 1 de cada 4) y `nivelesSinJefeMaximo` |
 | Qué jefes salen | `jefes` (borra uno de la lista para que no salga; el primero sale en `jefeDesdeNivel`) |
 | Cuántos toques necesita un jefe | `toquesJefeAlEmpezar`, `nivelesParaUnToqueMas`, `toquesJefeMaximo` |
 | Cuántas burbujitas suelta un jefe | `burbujitasPorToqueJefe`, `burbujitasAlReventarJefe` |
-| Cuántas normales vienen con el jefe | `normalesConJefe` |
-| Qué tan grande es el jefe, y cuánto se achica | `tamanoJefe`, `jefeAchicaHasta` |
+| Qué tan grande es el jefe, y cuánto se achica | `tamanoJefe` (0.75 = tres cuartos del ancho), `jefeAchicaHasta` |
+| Qué tan rápido va el jefe | `rapidezJefe` (0.55 = un poco más de la mitad que las normales) |
+| Que la pantalla no tiemble con los jefes | `temblorConJefes = false` |
 | Qué mundos salen | `mundos` (borra uno de la lista para que no salga) |
 | Qué mascota sale en cada mundo | `mascotas` (y su nombre para la voz en `nombresMascotas`) |
 | Cuántas burbujas sopla la mascota | `parteQueSoplaLaMascota` (0 = ninguna, todas por los lados) |
@@ -148,7 +160,9 @@ tiene el botón **"Volver al nivel 1"**.
 | Fondo del mar animado o dibujado | `fondosAnimados` (bórralo para volver al dibujado) |
 | Quitar las caritas | `caritas = false` |
 | La palabra al reventar | `palabraAlReventar` (`'¡POP!'`; antes era `'¡AY!'`) |
-| Los sonidos al reventar | `sonidosPop` (las 6 explosiones, van turnándose; borra las que no te gusten) |
+| Los sonidos al reventar | `sonidosPop` (las 8 pompas, subiendo y bajando; se pueden volver a poner las 6 explosiones de antes) |
+| Lo que dice cada mascota al tocarla | `sonidosMascotas` (la que no está ahí se ríe con `sonidoRisa`) |
+| Los sonidos de los jefes | `sonidoToqueJefe`, `sonidoJefePop`, `sonidosJefes` (el "¡buu!" del fantasma, etc.) |
 | Volver a poner el "¡ay!" | `sonidosAy` (escribe dentro `'burbujas/ay1.wav'` ... `'burbujas/ay4.wav'`) |
 | El tamaño de cada burbuja | `tamanoMinimo`, `tamanoMaximo`, `tamanoSuper`, `tamanoAnimalito`, `tamanoMega`, `tamanoChica` |
 | Que salgan más seguido o más espaciadas | `segundosEntreBurbujasMinimo`, `segundosEntreBurbujasMaximo` |
@@ -168,20 +182,26 @@ Cosas que están en otro archivo:
 
 ## Sonidos
 
-- `assets/sonidos/burbujas/explosion1.wav` ... `explosion6.wav`: la burbuja que revienta (van turnándose):
-  1 brillitos, 2 campanitas, 3 fuegos de color, 4 arpa mágica que sube, 5 gotitas de agua, 6 confeti.
-- `assets/sonidos/burbujas/ay1.wav` ... `ay4.wav`: el "¡ay!" de antes. Está quitado (`sonidosAy` vacía); se
-  pueden volver a poner.
-- `assets/sonidos/burbujas/pop1.wav` ... `pop4.wav`: el "¡blup!" de antes (ya no se usa).
-- `assets/sonidos/burbujas/jiji.wav`: la risita (las burbujas que tocas sin reventar, y la mascota).
-- `assets/sonidos/burbujas/super_toque.wav`: cada toque a la súper burbuja, la mega o un jefe.
-- `assets/sonidos/burbujas/super_pop.wav`: la súper, la mega o un jefe que revientan.
+- `assets/sonidos/burbujas/pompa1.wav` ... `pompa8.wav`: la burbuja que revienta: un "plip" delicado y una
+  notita de cajita de música, cada una en una nota distinta (van turnándose, subiendo y bajando).
+- `assets/sonidos/burbujas/pompa_grande.wav`: la súper o la mega que revientan.
+- `assets/sonidos/burbujas/toque_jefe.wav`: cada toque a un jefe ("¡bwoing!" grave), y cuando llega.
+- `assets/sonidos/burbujas/pompa_jefe.wav`: un jefe que revienta (bum suave y cascada de notitas).
+- `assets/sonidos/burbujas/buu.wav`: el "¡buu!" del fantasma.
+- `assets/sonidos/burbujas/zumm.wav`: el remolino y el pulpo cuando salen disparados.
+- `assets/sonidos/burbujas/explosion3.wav`: las chispitas del dragón.
+- `assets/sonidos/comunes/boing.wav`: la Burbuja Saltarina y la Pelota cuando las tocas.
+- `assets/sonidos/burbujas/miau.wav`, `guau.wav`, `pio.wav`: el gatito, el perrito y el pollito cuando los tocas.
+- `assets/sonidos/burbujas/jiji.wav`: la risita (las burbujas que tocas sin reventar, y el pececito).
+- `assets/sonidos/burbujas/super_toque.wav`: cada toque a la súper burbuja o a la mega.
 - `assets/sonidos/burbujas/soplo.wav`: la mascota que sopla una burbuja.
 - `assets/sonidos/burbujas/aplausos.wav`: la mascota que aplaude.
 - `assets/sonidos/burbujas/jefe.wav`: la fanfarria cuando llega un jefe.
-- `assets/sonidos/comunes/boing.wav`: la Burbuja Saltarina cuando salta.
 - `assets/sonidos/comunes/acierto.wav`: el animalito que sale volando y el festejo corto.
 - `assets/sonidos/comunes/felicidades.wav`: la fiesta de la celebración grande.
+- Los de antes (ya no se usan, pero se pueden volver a poner en los ajustes): `explosion1.wav` ...
+  `explosion6.wav` (brillitos, campanitas, fuegos, arpa, gotitas y confeti), `super_pop.wav`, `ay1.wav` ...
+  `ay4.wav` (el "¡ay!") y `pop1.wav` ... `pop4.wav`.
 
 Para cambiar uno, pon otro archivo con el **mismo nombre** en la misma carpeta.
 
