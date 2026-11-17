@@ -128,6 +128,7 @@ tiene el botón **"Volver al nivel 1"**.
 |---|---|
 | Más o menos burbujas | `burbujasAlEmpezar`, `burbujasMasPorNivel`, `burbujasMaximo`, `totalMaximo` |
 | Cuántas hay en la pantalla al mismo tiempo | `aLaVezAlEmpezar`, `aLaVezMaximo`, `nivelesParaUnaMasALaVez` |
+| Cuánto de la pantalla pueden tapar a la vez (si está más llena, la siguiente espera) | `espacioMaximoTapado` (0.55 = un poco más de la mitad; 1.0 = sin límite) |
 | Que vayan más lento o más rápido | `velocidadAlEmpezar`, `velocidadMasPorNivel`, `velocidadMaxima` (10 = cruza la pantalla en unos 10 segundos) |
 | Que cambien más o menos de dirección | `girosAlEmpezar`, `girosMasPorNivel`, `girosMaximo` |
 | Más o menos niveles tranquilos | `probabilidadNivelTranquilo` (0 = nunca) y `nivelesMasFacil` |
@@ -164,7 +165,7 @@ tiene el botón **"Volver al nivel 1"**.
 | Lo que dice cada mascota al tocarla | `sonidosMascotas` (la que no está ahí se ríe con `sonidoRisa`) |
 | Los sonidos de los jefes | `sonidoToqueJefe`, `sonidoJefePop`, `sonidosJefes` (el "¡buu!" del fantasma, etc.) |
 | Volver a poner el "¡ay!" | `sonidosAy` (escribe dentro `'burbujas/ay1.wav'` ... `'burbujas/ay4.wav'`) |
-| El tamaño de cada burbuja | `tamanoMinimo`, `tamanoMaximo`, `tamanoSuper`, `tamanoAnimalito`, `tamanoMega`, `tamanoChica` |
+| El tamaño de cada burbuja (en la tablet salen un poco más chicas; el jefe no) | `tamanoMinimo`, `tamanoMaximo`, `tamanoSuper`, `tamanoAnimalito`, `tamanoMega`, `tamanoChica` |
 | Que salgan más seguido o más espaciadas | `segundosEntreBurbujasMinimo`, `segundosEntreBurbujasMaximo` |
 | Cuánto se ve el cartel "NIVEL 3" | `segundosCartelNivel` |
 | Cuánto dura el festejo corto | `segundosFestejoCorto` |

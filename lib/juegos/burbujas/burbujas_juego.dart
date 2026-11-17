@@ -158,6 +158,8 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   Offset get temblor => _temblor();
   @visibleForTesting
   int get llamaradas => _llamaradas.length;
+  @visibleForTesting
+  Size? get zona => _tam;
 
   @override
   void initState() {
@@ -346,7 +348,50 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     }
   }
 
-  double _radioDe(TipoBurbuja tipo, double lado) {
+  /// Con qué se mide el tamaño de las burbujas: el ancho de la pantalla,
+  /// pero en una pantalla más ancha que la de un celular (como la tablet)
+  /// se miden con un ancho de celular, así no tapan tanto. El jefe no: él
+  /// usa todo el ancho.
+  static double ladoParaBurbujas(Size tam, TipoBurbuja tipo) {
+    final lado = tam.shortestSide;
+    if (tipo == TipoBurbuja.jefe) return lado;
+    return math.min(lado, tam.longestSide * _formaDeCelular);
+  }
+
+  /// El ancho de la zona de juego de un celular, comparado con su alto
+  /// (un poco menos: así en la tablet, con el jefe gigante, entran más).
+  static const double _formaDeCelular = 0.48;
+
+  /// El radio más grande que puede tener una burbuja de tipo [tipo].
+  double _radioMaximoDe(TipoBurbuja tipo, Size tam) {
+    final tamano = switch (tipo) {
+      TipoBurbuja.superBurbuja => AjustesBurbujas.tamanoSuper,
+      TipoBurbuja.animalito => AjustesBurbujas.tamanoAnimalito,
+      TipoBurbuja.mega => AjustesBurbujas.tamanoMega,
+      TipoBurbuja.jefe => AjustesBurbujas.tamanoJefe,
+      TipoBurbuja.rapida || TipoBurbuja.chica => AjustesBurbujas.tamanoChica,
+      TipoBurbuja.normal => AjustesBurbujas.tamanoMaximo,
+    };
+    return tamano * ladoParaBurbujas(tam, tipo) / 2;
+  }
+
+  /// true = si sale una burbuja de tipo [tipo], la pantalla queda más tapada
+  /// que [AjustesBurbujas.espacioMaximoTapado] (entonces espera). El jefe
+  /// y la primera burbuja salen siempre.
+  bool _muyLlena(TipoBurbuja tipo, Size tam) {
+    if (tipo == TipoBurbuja.jefe || _burbujas.isEmpty) return false;
+    final limite = AjustesBurbujas.espacioMaximoTapado;
+    if (limite >= 1) return false;
+    final r = _radioMaximoDe(tipo, tam);
+    var tapado = math.pi * r * r;
+    for (final b in _burbujas) {
+      tapado += math.pi * b.radio * b.radio;
+    }
+    return tapado > limite * tam.width * tam.height;
+  }
+
+  double _radioDe(TipoBurbuja tipo, Size tam) {
+    final lado = ladoParaBurbujas(tam, tipo);
     final tamano = switch (tipo) {
       TipoBurbuja.superBurbuja => AjustesBurbujas.tamanoSuper,
       TipoBurbuja.animalito => AjustesBurbujas.tamanoAnimalito,
@@ -400,10 +445,13 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
       return;
     }
     if (_ahora < _proximaSalida) return;
+    // Si ya está muy llena, espera a que revienten alguna (así siempre
+    // tienen lugar para moverse).
+    if (_muyLlena(_porSalir.first, tam)) return;
 
     final tipo = _porSalir.removeAt(0);
     final lado = tam.shortestSide;
-    final radio = _radioDe(tipo, lado);
+    final radio = _radioDe(tipo, tam);
     final w = tam.width;
     final h = tam.height;
     final mascota = _mascota;
@@ -1011,7 +1059,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         _ => giro + i * 2 * math.pi / n + _entre(-0.3, 0.3),
       };
       final direccion = Offset(math.cos(angulo), math.sin(angulo));
-      final radio = _radioDe(TipoBurbuja.chica, lado);
+      final radio = _radioDe(TipoBurbuja.chica, tam);
       var centro = de.centro + direccion * de.radio * 0.45;
       // Que no queden afuera de la pantalla.
       centro = Offset(

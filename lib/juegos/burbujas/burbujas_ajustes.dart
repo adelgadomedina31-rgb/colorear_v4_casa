@@ -289,7 +289,9 @@ class AjustesBurbujas {
   // -------------------------------------------------------------- tamaños
   //
   // Cuánto del ancho de la pantalla mide cada burbuja de lado a lado
-  // (0.22 = el 22%).
+  // (0.22 = el 22%). En la tablet (que es más ancha que un celular) salen
+  // un poco más chicas, así no tapan tanto. El jefe no: él usa todo el
+  // ancho ([tamanoJefe]).
 
   static const double tamanoMinimo = 0.19;
   static const double tamanoMaximo = 0.26;
@@ -297,6 +299,13 @@ class AjustesBurbujas {
   static const double tamanoAnimalito = 0.27;
   static const double tamanoMega = 0.46;
   static const double tamanoChica = 0.13; // rápidas y las de la mega
+
+  /// Cuánto de la pantalla pueden tapar las burbujas al mismo tiempo
+  /// (0.55 = un poco más de la mitad, contando al jefe). Si ya está así de
+  /// llena, la burbuja que sigue espera a que revientes alguna, para que
+  /// siempre tengan lugar para moverse. No cambia cuántas hay en el nivel,
+  /// solo cuántas a la vez. 1.0 = sin límite.
+  static const double espacioMaximoTapado = 0.55;
 
   /// Cada cuánto sale una burbuja nueva (en segundos, al azar entre estos
   /// dos números), mientras haya lugar en la pantalla.
