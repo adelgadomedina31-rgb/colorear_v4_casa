@@ -13,7 +13,8 @@ class Dibujos {
 
   static final Map<String, ui.Image?> _imagenes = <String, ui.Image?>{};
 
-  /// La palabra [texto] con borde blanco, de color [color] (64 px de alto).
+  /// La palabra [texto] con borde blanco, de color [color] (80 px de alto,
+  /// para que se vea nítida también en una tablet).
   static ui.Image? palabra(String texto, Color color, TextStyle? letra) {
     final clave = 'p|$texto|${color.toARGB32()}|${letra?.fontFamily}';
     return _imagenes.putIfAbsent(clave, () {
@@ -25,13 +26,13 @@ class Dibujos {
               style: TextStyle(
                 fontFamily: letra?.fontFamily,
                 fontFamilyFallback: letra?.fontFamilyFallback,
-                fontSize: 64,
+                fontSize: 80,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
                 foreground: borde
                     ? (Paint()
                       ..style = PaintingStyle.stroke
-                      ..strokeWidth = 10
+                      ..strokeWidth = 12.5
                       ..strokeJoin = StrokeJoin.round
                       ..color = Colors.white)
                     : (Paint()..color = color),
@@ -40,11 +41,11 @@ class Dibujos {
             textDirection: TextDirection.ltr,
           )..layout(),
       ];
-      return _foto(pintores, 8);
+      return _foto(pintores, 10);
     });
   }
 
-  /// Un emoji (96 px).
+  /// Un emoji (128 px, para que se vea nítido también en una tablet).
   static ui.Image? emoji(String emoji, TextStyle? letra) {
     final clave = 'e|$emoji|${letra?.fontFamily}';
     return _imagenes.putIfAbsent(clave, () {
@@ -54,13 +55,13 @@ class Dibujos {
           style: TextStyle(
             fontFamily: letra?.fontFamily,
             fontFamilyFallback: letra?.fontFamilyFallback,
-            fontSize: 96,
+            fontSize: 128,
             height: 1.1,
           ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      return _foto(<TextPainter>[pintor], 4);
+      return _foto(<TextPainter>[pintor], 5);
     });
   }
 

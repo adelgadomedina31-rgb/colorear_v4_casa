@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:colorear_ninos/app/ajustes_app.dart';
 import 'package:colorear_ninos/app/menu_juegos.dart';
 import 'package:colorear_ninos/app/presentacion.dart';
+import 'package:colorear_ninos/comun/pantalla_grande.dart';
 import 'package:colorear_ninos/juegos/pintar/partes/paleta_dibujo.dart';
 import 'package:colorear_ninos/juegos/pintar/partes/pintura.dart';
 
@@ -66,6 +67,8 @@ class _EstadoApp extends State<ColorearApp> with WidgetsBindingObserver {
         colorSchemeSeed: const Color(0xFFFF7043),
         scaffoldBackgroundColor: AjustesApp.fondoApp,
       ),
+      // En una tablet todo se agranda (ver lib/comun/pantalla_grande.dart).
+      builder: (context, hijo) => PantallaGrande(child: hijo!),
       home: AjustesApp.mostrarPresentacion
           ? const Presentacion()
           : const MenuJuegos(),

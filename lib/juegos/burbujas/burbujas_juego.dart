@@ -74,6 +74,13 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   /// Cambia en cada cuadro: el dibujo de las burbujas se repinta solo.
   final ValueNotifier<int> _cuadro = ValueNotifier<int>(0);
 
+  /// El mundo de atrás (cielo, mar...) se mueve despacito: basta con
+  /// dibujarlo 30 veces por segundo (las burbujas, 60). Así le queda más
+  /// tiempo a la tablet para las burbujas y todo va fluido.
+  final ValueNotifier<int> _cuadroMundo = ValueNotifier<int>(0);
+  double _ultimoMundo = -1;
+  static const double _cuadrosMundoPorSegundo = 30;
+
   /// El cartel grande ("NIVEL 3", "¡MUY BIEN!").
   late final AnimationController _cartel = AnimationController(vsync: this);
   String _textoCartel = '';
@@ -184,6 +191,10 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     _reloj.dispose();
     _cartel.dispose();
     _cuadro.dispose();
+    _cuadroMundo.dispose();
+    // Los cuadros de las animaciones ya preparados ocupan memoria: se
+    // sueltan al salir del juego.
+    Animaciones.olvidarCuadros();
     super.dispose();
   }
 
@@ -328,6 +339,11 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
     _animales.removeWhere((a) => a.terminado(_ahora));
     _llamaradas.removeWhere((l) => l.terminado(_ahora));
     _cuadro.value++;
+    if (t < _ultimoMundo ||
+        t - _ultimoMundo >= 1 / _cuadrosMundoPorSegundo - 0.004) {
+      _ultimoMundo = t;
+      _cuadroMundo.value++;
+    }
   }
 
   double _radioDe(TipoBurbuja tipo, double lado) {
@@ -1138,7 +1154,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
                 builder: (context) => CustomPaint(
                   painter: PintorMundo(
                     _vista,
-                    repaint: _cuadro,
+                    repaint: _cuadroMundo,
                     abajo: MediaQuery.paddingOf(context).bottom,
                     letra: DefaultTextStyle.of(context).style,
                   ),

@@ -126,9 +126,10 @@ void pintarMundo(
   TextStyle? letra,
 ) {
   // Si el mundo tiene un fondo animado (y ya se cargó), se ve ese.
-  final fondo = Animaciones.de(AjustesBurbujas.fondosAnimados[mundo.name]);
+  final ruta = AjustesBurbujas.fondosAnimados[mundo.name];
+  final fondo = Animaciones.de(ruta);
   if (fondo != null) {
-    _fondoAnimado(canvas, tam, fondo, ahora);
+    _fondoAnimado(canvas, tam, ruta!, fondo, ahora);
     return;
   }
   switch (mundo) {
@@ -149,13 +150,20 @@ void pintarMundo(
 /// necesario y, si sobra, se corta arriba o a los lados (la parte de abajo
 /// se ve siempre).
 void _fondoAnimado(
-    Canvas canvas, Size tam, LottieDrawable fondo, double ahora) {
+  Canvas canvas,
+  Size tam,
+  String ruta,
+  LottieDrawable fondo,
+  double ahora,
+) {
   final duracion = math.max(0.1, fondo.composition.seconds);
-  fondo.setProgress((ahora / duracion) % 1);
   canvas.save();
   canvas.clipRect(Offset.zero & tam);
-  fondo.draw(
+  // Cada cuadro se arma una sola vez (ver Animaciones.dibujar).
+  Animaciones.dibujar(
     canvas,
+    ruta,
+    (ahora / duracion) % 1,
     Offset.zero & tam,
     fit: BoxFit.cover,
     alignment: Alignment.bottomCenter,

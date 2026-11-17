@@ -451,9 +451,10 @@ void pintarMascota(
   canvas.rotate(giro);
   canvas.scale(ancho * aparece * m.espejo, alto * aparece);
   if (dibujo != null) {
-    dibujo.setProgress(m.avance);
-    dibujo.draw(
+    Animaciones.dibujar(
       canvas,
+      m.ruta,
+      m.avance,
       Rect.fromCenter(
         center: Offset.zero,
         width: lugar.width,

@@ -25,6 +25,7 @@ lib/
 │   ├── botones.dart ........... los botones redondos grandes
 │   ├── dificultad.dart ........ cómo sube y baja la dificultad (2, 3, 4 opciones)
 │   ├── repartir.dart .......... cómo se acomodan los globos y tarjetas en la pantalla
+│   ├── pantalla_grande.dart ... en una tablet agranda toda la app (ver agrandarEnTablet en ajustes_app.dart)
 │   └── titulo_colores.dart .... los títulos con cada letra de un color
 │
 └── juegos/ .................... UN JUEGO POR CARPETA (cada una tiene su LEEME.md)

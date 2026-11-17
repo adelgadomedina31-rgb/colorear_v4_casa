@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 // =============================================================================
 //
 //  Lo que vale para TODOS los juegos: la presentación, el menú, la voz, el
-//  volumen de la fiesta y la lista de colores con sus nombres.
+//  volumen de la fiesta, la lista de colores con sus nombres y cómo se ve
+//  en una tablet.
 //
 //  Lo de cada juego está en su propia carpeta:
 //    - Pintar ............ lib/juegos/pintar/pintar_ajustes.dart
@@ -32,6 +33,20 @@ class AjustesApp {
 
   /// Color de fondo de las pantallas (crema clarito).
   static const Color fondoApp = Color(0xFFFFF4D6);
+
+  // -------------------------------------------------------------- tablets
+
+  /// true = en una tablet (como la Blackview Tab 20 Kids de 10 pulgadas)
+  /// todo se agranda en la misma proporción: botones, letras, tarjetas y
+  /// dibujos se ven como en un celular, pero más grandes y fáciles de
+  /// tocar. En un celular no cambia nada.
+  static const bool agrandarEnTablet = true;
+
+  /// Qué tan grande se ve todo en la tablet: el ancho de "celular" con el
+  /// que se arma la pantalla. 520 = como un celular grande (en la tablet de
+  /// 10 pulgadas todo se ve 1.5 veces más grande). Un número más chico
+  /// agranda más (480); uno más grande achica (600).
+  static const double anchoComoCelular = 520;
 
   // --------------------------------------------------------- presentación
 

@@ -89,6 +89,21 @@ class _EstadoMenuJuegos extends State<MenuJuegos> {
     await SystemNavigator.pop();
   }
 
+  /// La forma de las tarjetas (ancho / alto): un poquito más altas que
+  /// anchas, pero si así no caben todas en la pantalla (en una pantalla más
+  /// ancha, como la de una tablet), un poco más bajitas para que se vean
+  /// todas sin tener que mover la pantalla.
+  static double _forma(Size espacio, int cuantas) {
+    const normal = 0.88;
+    const masBajita = 1.25;
+    final ancho = (espacio.width - 18 * 2 - 18) / 2;
+    final filas = (cuantas / 2).ceil();
+    if (filas == 0 || ancho <= 0) return normal;
+    final alto = (espacio.height - 8 - 32 - 18 * (filas - 1)) / filas;
+    if (alto <= 0) return normal;
+    return (ancho / alto).clamp(normal, masBajita).toDouble();
+  }
+
   @override
   Widget build(BuildContext context) {
     final juegos = _visibles;
@@ -143,19 +158,20 @@ class _EstadoMenuJuegos extends State<MenuJuegos> {
                         ),
                       ),
                     )
-                  : GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 18,
-                        crossAxisSpacing: 18,
-                        childAspectRatio: 0.88,
-                      ),
-                      itemCount: juegos.length,
-                      itemBuilder: (context, i) => _TarjetaJuego(
-                        juego: juegos[i],
-                        alTocar: () => _abrir(juegos[i]),
+                  : LayoutBuilder(
+                      builder: (context, caja) => GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 18,
+                          crossAxisSpacing: 18,
+                          childAspectRatio: _forma(caja.biggest, juegos.length),
+                        ),
+                        itemCount: juegos.length,
+                        itemBuilder: (context, i) => _TarjetaJuego(
+                          juego: juegos[i],
+                          alTocar: () => _abrir(juegos[i]),
+                        ),
                       ),
                     ),
             ),
