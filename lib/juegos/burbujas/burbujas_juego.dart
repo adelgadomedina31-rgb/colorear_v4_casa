@@ -362,13 +362,19 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   /// (un poco menos: así en la tablet, con el jefe gigante, entran más).
   static const double _formaDeCelular = 0.48;
 
+  /// El tamaño del jefe: parte del ancho de la pantalla (de pie) o del
+  /// alto (acostada).
+  static double _tamanoJefe(Size tam) => tam.width > tam.height * 1.1
+      ? AjustesBurbujas.tamanoJefeAcostada
+      : AjustesBurbujas.tamanoJefe;
+
   /// El radio más grande que puede tener una burbuja de tipo [tipo].
   double _radioMaximoDe(TipoBurbuja tipo, Size tam) {
     final tamano = switch (tipo) {
       TipoBurbuja.superBurbuja => AjustesBurbujas.tamanoSuper,
       TipoBurbuja.animalito => AjustesBurbujas.tamanoAnimalito,
       TipoBurbuja.mega => AjustesBurbujas.tamanoMega,
-      TipoBurbuja.jefe => AjustesBurbujas.tamanoJefe,
+      TipoBurbuja.jefe => _tamanoJefe(tam),
       TipoBurbuja.rapida || TipoBurbuja.chica => AjustesBurbujas.tamanoChica,
       TipoBurbuja.normal => AjustesBurbujas.tamanoMaximo,
     };
@@ -396,7 +402,7 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
       TipoBurbuja.superBurbuja => AjustesBurbujas.tamanoSuper,
       TipoBurbuja.animalito => AjustesBurbujas.tamanoAnimalito,
       TipoBurbuja.mega => AjustesBurbujas.tamanoMega,
-      TipoBurbuja.jefe => AjustesBurbujas.tamanoJefe,
+      TipoBurbuja.jefe => _tamanoJefe(tam),
       TipoBurbuja.rapida ||
       TipoBurbuja.chica =>
         AjustesBurbujas.tamanoChica * _entre(0.9, 1.1),
@@ -1218,20 +1224,34 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
               ),
             ),
           ),
+          // Los botones, las estrellas y la barrita de cuánto falta van
+          // juntos en una sola barra: arriba (de pie) o a la izquierda (con
+          // la pantalla acostada). Todo lo demás es para las burbujas.
           SafeArea(
-            child: Column(
-              children: [
-                BarraJuego(estrellas: _estrellas, alRepetir: _decirQueHacer),
-                _progreso(),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, caja) {
-                      _tam = caja.biggest;
-                      return _zonaDeJuego(context);
-                    },
-                  ),
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, pantalla) {
+                final acostada = pantalla.maxWidth > pantalla.maxHeight * 1.1;
+                return Flex(
+                  direction: acostada ? Axis.horizontal : Axis.vertical,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    BarraJuego(
+                      estrellas: _estrellas,
+                      alRepetir: _decirQueHacer,
+                      vertical: acostada,
+                      progreso: _progreso(vertical: acostada),
+                    ),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, caja) {
+                          _tam = caja.biggest;
+                          return _zonaDeJuego(context);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
           if (_celebrando)
@@ -1249,69 +1269,98 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   }
 
   /// Cuántas lleva y cuántas faltan: una burbujita por cada burbuja del
-  /// nivel (las que ya reventó son estrellas). Si son muchas, una barra.
-  Widget _progreso() {
+  /// nivel (las que ya reventó son estrellas). Si son muchas, una barrita
+  /// que se va llenando. Va al costadito de las estrellas: en fila (con la
+  /// pantalla de pie) o de abajo hacia arriba si es [vertical].
+  Widget _progreso({required bool vertical}) {
     final total = _total;
     final Widget contenido;
     if (total <= 24) {
-      contenido = FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < total; i++)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: i < _reventadas
-                    ? const Icon(
-                        Icons.star_rounded,
-                        key: ValueKey<String>('hecha'),
-                        size: 28,
-                        color: Color(0xFFFFC107),
-                      )
-                    : Container(
-                        key: const ValueKey<String>('falta'),
-                        width: 20,
-                        height: 20,
-                        margin: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.6),
-                          border: Border.all(
-                            color: const Color(0xFF4FC3F7),
-                            width: 2.5,
-                          ),
-                        ),
+      Widget punto(int i) => Padding(
+            padding: const EdgeInsets.all(2),
+            child: i < _reventadas
+                ? const Icon(
+                    Icons.star_rounded,
+                    key: ValueKey<String>('hecha'),
+                    size: 28,
+                    color: Color(0xFFFFC107),
+                  )
+                : Container(
+                    key: const ValueKey<String>('falta'),
+                    width: 20,
+                    height: 20,
+                    margin: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.6),
+                      border: Border.all(
+                        color: const Color(0xFF4FC3F7),
+                        width: 2.5,
                       ),
-              ),
-          ],
+                    ),
+                  ),
+          );
+      // Si son muchas, en dos líneas.
+      final porLinea = total > 12 ? (total / 2).ceil() : math.max(1, total);
+      final lineas = <Widget>[
+        for (var desde = 0; desde < total; desde += porLinea)
+          Flex(
+            direction: vertical ? Axis.vertical : Axis.horizontal,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = desde; i < math.min(total, desde + porLinea); i++)
+                punto(i),
+            ],
+          ),
+      ];
+      contenido = Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Flex(
+            direction: vertical ? Axis.horizontal : Axis.vertical,
+            mainAxisSize: MainAxisSize.min,
+            children: lineas,
+          ),
         ),
       );
     } else {
       final parte = total == 0 ? 0.0 : _reventadas / total;
-      contenido = Row(
-        children: [
-          const Icon(Icons.star_rounded, size: 28, color: Color(0xFFFFC107)),
-          const SizedBox(width: 6),
-          Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: LinearProgressIndicator(
-                key: const ValueKey<String>('barra'),
-                value: parte,
-                minHeight: 18,
-                backgroundColor: Colors.white.withValues(alpha: 0.6),
-                color: const Color(0xFFFFC107),
-              ),
-            ),
-          ),
-        ],
+      final barra = ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: LinearProgressIndicator(
+          key: const ValueKey<String>('barra'),
+          value: parte,
+          minHeight: 18,
+          backgroundColor: Colors.white.withValues(alpha: 0.6),
+          color: const Color(0xFFFFC107),
+        ),
       );
+      contenido = vertical
+          // De abajo hacia arriba, con la estrella arriba.
+          ? Column(
+              children: [
+                const Icon(Icons.star_rounded,
+                    size: 28, color: Color(0xFFFFC107)),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: Center(
+                    child: RotatedBox(quarterTurns: 3, child: barra),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                const Icon(Icons.star_rounded,
+                    size: 28, color: Color(0xFFFFC107)),
+                const SizedBox(width: 6),
+                Expanded(child: barra),
+              ],
+            );
     }
-    return Padding(
+    return KeyedSubtree(
       key: const ValueKey<String>('progreso'),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-      child: SizedBox(height: 30, child: contenido),
+      child: contenido,
     );
   }
 

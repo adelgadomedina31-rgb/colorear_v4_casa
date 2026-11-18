@@ -145,7 +145,7 @@ tiene el botón **"Volver al nivel 1"**.
 | Qué jefes salen | `jefes` (borra uno de la lista para que no salga; el primero sale en `jefeDesdeNivel`) |
 | Cuántos toques necesita un jefe | `toquesJefeAlEmpezar`, `nivelesParaUnToqueMas`, `toquesJefeMaximo` |
 | Cuántas burbujitas suelta un jefe | `burbujitasPorToqueJefe`, `burbujitasAlReventarJefe` |
-| Qué tan grande es el jefe, y cuánto se achica | `tamanoJefe` (0.75 = tres cuartos del ancho), `jefeAchicaHasta` |
+| Qué tan grande es el jefe, y cuánto se achica | `tamanoJefe` (0.75 = tres cuartos del ancho), `tamanoJefeAcostada` (con la pantalla acostada: 0.6 del alto), `jefeAchicaHasta` |
 | Qué tan rápido va el jefe | `rapidezJefe` (0.55 = un poco más de la mitad que las normales) |
 | Que la pantalla no tiemble con los jefes | `temblorConJefes = false` |
 | Qué mundos salen | `mundos` (borra uno de la lista para que no salga) |

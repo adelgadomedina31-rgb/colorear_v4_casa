@@ -174,6 +174,12 @@ class AjustesBurbujas {
   /// tres cuartos), y qué tan chiquito queda al final (0.4 = casi la
   /// mitad).
   static const double tamanoJefe = 0.75;
+
+  /// El tamaño del jefe con la pantalla acostada: parte del ALTO de la
+  /// pantalla (0.6 = un poco más de la mitad). Así le queda lugar para
+  /// subir y bajar. Con 0.75 se ve igual de grande que de pie, pero casi no
+  /// se puede mover para arriba y para abajo.
+  static const double tamanoJefeAcostada = 0.6;
   static const double jefeAchicaHasta = 0.65;
 
   /// Qué tan rápido va el jefe (comparado con las burbujas normales: 0.5 =
