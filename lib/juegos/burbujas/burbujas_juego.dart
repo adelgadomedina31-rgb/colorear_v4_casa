@@ -714,7 +714,9 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
   }
 
   /// Dos burbujas que se tocan se empujan y rebotan una con la otra (así no
-  /// quedan una encima de la otra).
+  /// quedan una encima de la otra). El jefe no: él pasa empujando a las
+  /// demás, sin frenarse ni cambiar de camino, así sus movimientos (saltos,
+  /// carreras, vueltas) se ven libres.
   void _chocar() {
     for (var i = 0; i < _burbujas.length; i++) {
       final a = _burbujas[i];
@@ -726,15 +728,21 @@ class EstadoBurbujasJuego extends State<BurbujasJuego>
         final distancia = entre.distance;
         final juntas = (a.radio + b.radio) * 0.95;
         if (distancia >= juntas || distancia == 0) continue;
-        // Se separan (la más grande se mueve menos).
+        // Se separan (la más grande se mueve menos; el jefe, nada).
         final n = entre / distancia;
         final sobra = juntas - distancia;
-        final parteA = b.radio / (a.radio + b.radio);
+        final jefeA = a.tipo == TipoBurbuja.jefe;
+        final jefeB = b.tipo == TipoBurbuja.jefe;
+        final parteA = jefeA
+            ? 0.0
+            : jefeB
+                ? 1.0
+                : b.radio / (a.radio + b.radio);
         a.centro = _dentro(a, a.centro + n * sobra * parteA);
         b.centro = _dentro(b, b.centro - n * sobra * (1 - parteA));
         // Rebotan (solo si iban una hacia la otra).
-        a.rumbo = _reflejar(a.rumbo, n);
-        b.rumbo = _reflejar(b.rumbo, -n);
+        if (!jefeA) a.rumbo = _reflejar(a.rumbo, n);
+        if (!jefeB) b.rumbo = _reflejar(b.rumbo, -n);
       }
     }
   }

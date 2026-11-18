@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -89,19 +90,31 @@ class _EstadoMenuJuegos extends State<MenuJuegos> {
     await SystemNavigator.pop();
   }
 
-  /// La forma de las tarjetas (ancho / alto): un poquito más altas que
-  /// anchas, pero si así no caben todas en la pantalla (en una pantalla más
-  /// ancha, como la de una tablet), un poco más bajitas para que se vean
-  /// todas sin tener que mover la pantalla.
-  static double _forma(Size espacio, int cuantas) {
+  /// Cuántas columnas de tarjetas y su forma (ancho / alto), para que se
+  /// vean todas sin tener que mover la pantalla y lo más grandes posible.
+  /// Las tarjetas son un poquito más altas que anchas, o más bajitas si
+  /// así no caben (en una tablet, o con la pantalla acostada). De pie
+  /// quedan 2 columnas; acostada, más.
+  static (int, double) _columnas(Size espacio, int cuantas) {
     const normal = 0.88;
-    const masBajita = 1.25;
-    final ancho = (espacio.width - 18 * 2 - 18) / 2;
-    final filas = (cuantas / 2).ceil();
-    if (filas == 0 || ancho <= 0) return normal;
-    final alto = (espacio.height - 8 - 32 - 18 * (filas - 1)) / filas;
-    if (alto <= 0) return normal;
-    return (ancho / alto).clamp(normal, masBajita).toDouble();
+    const masBajita = 1.5;
+    var mejor = (2, normal);
+    var mejorArea = -1.0;
+    for (var c = 1; c <= math.max(2, cuantas); c++) {
+      final filas = (cuantas / c).ceil();
+      final ancho = (espacio.width - 18 * 2 - 18 * (c - 1)) / c;
+      final lugar = (espacio.height - 8 - 32 - 18 * (filas - 1)) / filas;
+      if (filas == 0 || ancho <= 0 || lugar <= 0) continue;
+      final alto = math.min(lugar, ancho / normal);
+      // Muy bajita no: mejor otra cantidad de columnas.
+      final cabe = alto >= ancho / masBajita;
+      final area = ancho * alto * (cabe ? 1 : 0.01);
+      if (area > mejorArea) {
+        mejorArea = area;
+        mejor = (c, (ancho / alto).clamp(normal, masBajita).toDouble());
+      }
+    }
+    return mejor;
   }
 
   @override
@@ -159,20 +172,25 @@ class _EstadoMenuJuegos extends State<MenuJuegos> {
                       ),
                     )
                   : LayoutBuilder(
-                      builder: (context, caja) => GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 18,
-                          crossAxisSpacing: 18,
-                          childAspectRatio: _forma(caja.biggest, juegos.length),
-                        ),
-                        itemCount: juegos.length,
-                        itemBuilder: (context, i) => _TarjetaJuego(
-                          juego: juegos[i],
-                          alTocar: () => _abrir(juegos[i]),
-                        ),
-                      ),
+                      builder: (context, caja) {
+                        final (columnas, forma) =
+                            _columnas(caja.biggest, juegos.length);
+                        return GridView.builder(
+                          padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: columnas,
+                            mainAxisSpacing: 18,
+                            crossAxisSpacing: 18,
+                            childAspectRatio: forma,
+                          ),
+                          itemCount: juegos.length,
+                          itemBuilder: (context, i) => _TarjetaJuego(
+                            juego: juegos[i],
+                            alTocar: () => _abrir(juegos[i]),
+                          ),
+                        );
+                      },
                     ),
             ),
           ],

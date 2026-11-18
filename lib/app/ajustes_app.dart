@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 // =============================================================================
 //
 //  Lo que vale para TODOS los juegos: la presentación, el menú, la voz, el
-//  volumen de la fiesta, la lista de colores con sus nombres y cómo se ve
-//  en una tablet.
+//  volumen de la fiesta, la lista de colores con sus nombres, cómo se ve
+//  en una tablet y si gira (vertical u horizontal).
 //
 //  Lo de cada juego está en su propia carpeta:
 //    - Pintar ............ lib/juegos/pintar/pintar_ajustes.dart
@@ -47,6 +47,15 @@ class AjustesApp {
   /// 10 pulgadas todo se ve 1.5 veces más grande). Un número más chico
   /// agranda más (480); uno más grande achica (600).
   static const double anchoComoCelular = 520;
+
+  // ---------------------------------------------------------- orientación
+
+  /// true = la app gira con la tablet o el celular: si está de pie se ve
+  /// vertical, y si está acostado se ve horizontal (como venga en ese
+  /// momento). false = siempre vertical.
+  /// Si la tablet tiene apagado "Girar automáticamente", se queda como
+  /// esté.
+  static const bool girarConElAparato = true;
 
   // --------------------------------------------------------- presentación
 

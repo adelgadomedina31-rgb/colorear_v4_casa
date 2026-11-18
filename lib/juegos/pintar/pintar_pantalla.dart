@@ -454,30 +454,50 @@ class _EstadoPintar extends State<PintarPantalla> {
                     ],
                   ),
                 ),
+                // De pie: el dibujo y abajo los colores. Con la pantalla
+                // acostada: el dibujo y los colores al costado (así el
+                // dibujo se ve grande).
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Lienzo(
-                      key: ValueKey<String>(clave),
-                      dibujo: _dibujo,
-                      color: _color?.color ?? const Color(0x00000000),
-                      colores: <Color>[for (final c in _colores) c.color],
-                      puedePintar: _puedePintar,
-                      personaje: _personaje?.zonas ?? const <int>{},
-                      alMedir: _alMedir,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
-                  child: Paleta(
-                    key: ValueKey<String>(clave),
-                    colores: _colores,
-                    seleccionado: _color,
-                    bloqueada: _hablando,
-                    cargando: _paleta == null,
-                    alElegir: _elegirColor,
-                  ),
+                  child: LayoutBuilder(builder: (context, caja) {
+                    final acostada = caja.maxWidth > caja.maxHeight * 1.1;
+                    return Flex(
+                      direction: acostada ? Axis.horizontal : Axis.vertical,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: acostada
+                                ? const EdgeInsets.fromLTRB(12, 0, 4, 12)
+                                : const EdgeInsets.symmetric(horizontal: 12),
+                            child: Lienzo(
+                              key: ValueKey<String>(clave),
+                              dibujo: _dibujo,
+                              color: _color?.color ?? const Color(0x00000000),
+                              colores: <Color>[
+                                for (final c in _colores) c.color
+                              ],
+                              puedePintar: _puedePintar,
+                              personaje: _personaje?.zonas ?? const <int>{},
+                              alMedir: _alMedir,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: acostada
+                              ? const EdgeInsets.fromLTRB(8, 0, 16, 12)
+                              : const EdgeInsets.fromLTRB(12, 10, 12, 16),
+                          child: Paleta(
+                            key: ValueKey<String>(clave),
+                            colores: _colores,
+                            seleccionado: _color,
+                            bloqueada: _hablando,
+                            cargando: _paleta == null,
+                            alElegir: _elegirColor,
+                            vertical: acostada,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
                 ),
               ],
             ),

@@ -6,8 +6,9 @@ import 'package:colorear_ninos/app/ajustes_app.dart';
 import 'package:colorear_ninos/juegos/pintar/pintar_ajustes.dart';
 
 /// Los colores del dibujo: tarritos redondos de pintura sobre una bandeja
-/// blanca, en una sola fila (cada dibujo tiene como mucho 5 colores). Los
-/// colores no se acaban.
+/// blanca, en una sola fila (cada dibujo tiene como mucho 5 colores), o en
+/// una columna si es [vertical] (con la pantalla acostada). Los colores no
+/// se acaban.
 ///
 /// - El elegido se agranda, rebota y muestra una estrellita.
 /// - Si no hay ninguno elegido, los tarritos saltan uno tras otro, como
@@ -21,6 +22,7 @@ class Paleta extends StatefulWidget {
     required this.alElegir,
     this.bloqueada = false,
     this.cargando = false,
+    this.vertical = false,
   });
 
   /// Los colores del dibujo (como mucho 5).
@@ -35,6 +37,9 @@ class Paleta extends StatefulWidget {
 
   /// true mientras se lee la paleta del dibujo: la bandeja se ve vacía.
   final bool cargando;
+
+  /// true = los tarritos van uno debajo del otro (al costado del dibujo).
+  final bool vertical;
 
   @override
   State<Paleta> createState() => _EstadoPaleta();
@@ -105,24 +110,36 @@ class _EstadoPaleta extends State<Paleta> with SingleTickerProviderStateMixin {
       child: LayoutBuilder(
         builder: (context, restricciones) {
           // Lugar para 5 tarritos en fila, aunque el dibujo tenga menos.
+          final vertical = widget.vertical;
           final cupo =
               math.max(AjustesPintar.maxColoresPorDibujo, colores.length);
-          final ranura =
-              (restricciones.maxWidth / cupo).clamp(44.0, 90.0).toDouble();
+          final largo =
+              vertical ? restricciones.maxHeight : restricciones.maxWidth;
+          final ranura = (largo / cupo).clamp(44.0, 90.0).toDouble();
           final tamano = (ranura / 1.22).clamp(36.0, 72.0).toDouble();
-          if (widget.cargando) return SizedBox(height: ranura);
+          if (widget.cargando) {
+            return vertical
+                ? SizedBox(width: ranura)
+                : SizedBox(height: ranura);
+          }
           return SizedBox(
-            height: ranura,
+            width: vertical ? ranura : null,
+            height: vertical ? null : ranura,
             child: AnimatedBuilder(
               animation: _saltos,
-              builder: (context, _) => Row(
+              builder: (context, _) => Flex(
+                direction: vertical ? Axis.vertical : Axis.horizontal,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   for (var i = 0; i < colores.length; i++)
                     SizedBox(
-                      width: ranura,
+                      width: vertical ? null : ranura,
+                      height: vertical ? ranura : null,
                       child: Transform.translate(
-                        offset: Offset(0, -tamano * 0.16 * _salto(i)),
+                        // En columna saltan hacia el dibujo (a la izquierda).
+                        offset: vertical
+                            ? Offset(-tamano * 0.16 * _salto(i), 0)
+                            : Offset(0, -tamano * 0.16 * _salto(i)),
                         child: _Tarrito(
                           color: colores[i].color,
                           tamano: tamano,

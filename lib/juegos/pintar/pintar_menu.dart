@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:colorear_ninos/app/ajustes_app.dart';
@@ -127,20 +129,23 @@ class _EstadoPintarMenu extends State<PintarMenu> {
       thumbVisibility: true,
       thickness: 6,
       radius: const Radius.circular(8),
-      child: GridView.builder(
-        controller: _scroll,
-        cacheExtent: 800,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-        ),
-        itemCount: _dibujos.length,
-        itemBuilder: (context, i) => _Tarjeta(
-          dibujo: _dibujos[i],
-          borde: _bordes[i % _bordes.length],
-          alTocar: () => _abrirDibujo(i),
+      // De pie, 2 columnas; con la pantalla acostada (más ancha), más.
+      child: LayoutBuilder(
+        builder: (context, caja) => GridView.builder(
+          controller: _scroll,
+          cacheExtent: 800,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: math.max(2, (caja.maxWidth / 270).floor()),
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+          ),
+          itemCount: _dibujos.length,
+          itemBuilder: (context, i) => _Tarjeta(
+            dibujo: _dibujos[i],
+            borde: _bordes[i % _bordes.length],
+            alTocar: () => _abrirDibujo(i),
+          ),
         ),
       ),
     );

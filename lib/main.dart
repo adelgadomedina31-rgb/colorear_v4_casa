@@ -19,9 +19,18 @@ import 'package:colorear_ninos/juegos/pintar/partes/pintura.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Siempre vertical y a pantalla completa, para que sea más difícil salirse sin querer.
+  // Vertical u horizontal, como esté el aparato (o siempre vertical: ver
+  // girarConElAparato en lib/app/ajustes_app.dart), y a pantalla completa,
+  // para que sea más difícil salirse sin querer.
   await SystemChrome.setPreferredOrientations(
-    <DeviceOrientation>[DeviceOrientation.portraitUp],
+    AjustesApp.girarConElAparato
+        ? <DeviceOrientation>[
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+            DeviceOrientation.portraitDown,
+          ]
+        : <DeviceOrientation>[DeviceOrientation.portraitUp],
   );
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(const ColorearApp());

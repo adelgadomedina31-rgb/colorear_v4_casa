@@ -10,7 +10,7 @@ lib/
 ├── main.dart .................. arranca la app (no hace falta tocarlo)
 │
 ├── app/ ....................... LO DE TODA LA APP
-│   ├── ajustes_app.dart ....... ⭐ ajustes generales: voz, volumen, colores, presentación, título del menú
+│   ├── ajustes_app.dart ....... ⭐ ajustes generales: voz, volumen, colores, presentación, título del menú, si gira (girarConElAparato)
 │   ├── lista_juegos.dart ...... ⭐ los juegos del menú: quitar, ordenar, cambiar nombre/dibujo/color
 │   ├── menu_juegos.dart ....... la pantalla del menú (tarjetas, botón de apagar, engranaje)
 │   ├── presentacion.dart ...... la presentación con estrellas al abrir la app
